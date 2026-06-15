@@ -1,6 +1,9 @@
 # .NET
 backend/**/bin/
 backend/**/obj/
+backend/HospitalityTaskManager.Api/Data/*.db
+backend/HospitalityTaskManager.Api/Data/*.db-shm
+backend/HospitalityTaskManager.Api/Data/*.db-wal
 *.user
 *.suo
 
