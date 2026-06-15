@@ -1,0 +1,81 @@
+<main id="main-content" class="min-h-screen bg-[#f7f4ee] text-[#181512]">
+  <section class="mx-auto max-w-6xl px-6 py-8 sm:px-8 lg:px-10 lg:py-12">
+    <div class="rounded-[2rem] border border-black/10 bg-[#f2ede4] p-6 sm:p-8 lg:p-10">
+      <div class="flex items-center gap-3">
+        <span class="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white text-xs font-semibold tracking-[0.16em]">HT</span>
+        <div class="min-w-0">
+          <p class="truncate text-xs font-medium uppercase tracking-[0.28em] text-black/50">Hospitality Task Manager</p>
+          <p class="truncate text-sm text-black/65">Tasks for rooms, service, and repairs</p>
+        </div>
+      </div>
+
+      <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_380px] lg:items-start">
+        <div>
+          <h1 class="max-w-3xl text-5xl leading-none tracking-[-0.05em] text-balance sm:text-6xl">
+            One Clear Board for Hospitality Tasks.
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg leading-8 text-black/70">
+            Track room prep, repair requests, kitchen follow-ups, and daily operational work in one place. Create tasks, update progress, filter by status, and keep the shift moving.
+          </p>
+
+          <dl class="mt-8 flex flex-wrap gap-3">
+            @for (item of summary; track item.label) {
+              <div class="rounded-full border border-black/10 bg-white px-4 py-3">
+                <dt class="text-[11px] uppercase tracking-[0.22em] text-black/45">{{ item.label }}</dt>
+                <dd class="mt-1 text-sm font-medium text-black/80">{{ item.value }}</dd>
+              </div>
+            }
+          </dl>
+
+          <div class="mt-8 grid gap-3 sm:grid-cols-2">
+            @for (feature of features; track feature.title) {
+              <article class="rounded-[1.35rem] border border-black/10 bg-white p-5">
+                <h2 class="text-2xl">{{ feature.title }}</h2>
+                <p class="mt-2 text-sm leading-7 text-black/65">{{ feature.description }}</p>
+              </article>
+            }
+          </div>
+
+          <div class="mt-8 border-t border-black/10 pt-6">
+            <p class="text-xs font-medium uppercase tracking-[0.28em] text-black/45">Departments</p>
+            <div class="mt-4 flex flex-wrap gap-3">
+              @for (department of departments; track department) {
+                <span class="rounded-full border border-black/10 bg-white px-4 py-3 text-sm text-black/75">{{ department }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <aside class="rounded-[1.8rem] border border-black/10 bg-white p-5 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
+          <div class="flex items-center justify-between gap-3 border-b border-black/10 pb-4">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.24em] text-black/45">Board Preview</p>
+              <h2 class="mt-2 text-2xl">Today’s Board</h2>
+            </div>
+            <span class="rounded-full border border-black/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-black/55">Live Status</span>
+          </div>
+
+          <div class="mt-5 flex flex-wrap gap-2">
+            @for (status of statuses; track status) {
+              <span class="rounded-full border border-black/10 px-3 py-1 text-xs text-black/60">{{ status }}</span>
+            }
+          </div>
+
+          <div class="mt-5 space-y-3">
+            @for (task of previewTasks; track task.title) {
+              <article class="rounded-2xl border border-black/10 px-4 py-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-medium text-black/85">{{ task.title }}</p>
+                    <p class="mt-1 text-sm text-black/55">{{ task.department }}</p>
+                  </div>
+                  <span class="shrink-0 rounded-full bg-black px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[#f7f4ee]">{{ task.status }}</span>
+                </div>
+              </article>
+            }
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
