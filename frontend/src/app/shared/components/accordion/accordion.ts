@@ -34,14 +34,16 @@ export class Accordion {
   readonly initialOpenId = input<AccordionKey | null>(null);
 
   protected readonly openItemId = signal<AccordionKey | null>(null);
+  protected readonly initialOpenApplied = signal(false);
 
   protected readonly hasItems = computed(() => this.items().length > 0);
 
   constructor() {
     effect(() => {
       const initialOpenId = this.initialOpenId();
-      if (this.openItemId() === null && initialOpenId !== null) {
+      if (!this.initialOpenApplied() && this.openItemId() === null && initialOpenId !== null) {
         this.openItemId.set(initialOpenId);
+        this.initialOpenApplied.set(true);
       }
     });
 

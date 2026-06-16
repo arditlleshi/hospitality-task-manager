@@ -163,6 +163,7 @@ export class TaskListPage {
   });
 
   protected readonly visibleTasks = computed(() => this.tasks());
+  protected readonly firstVisibleTaskId = computed(() => this.visibleTasks()[0]?.id ?? null);
   protected readonly pendingDeletionTask = computed(
     () => this.tasks().find((task) => task.id === this.pendingDeletionId()) ?? null,
   );
