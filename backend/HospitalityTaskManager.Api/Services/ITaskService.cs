@@ -16,6 +16,14 @@ public interface ITaskService
     Task<IReadOnlyList<TaskDto>> GetTasksAsync(GetTasksQueryDto query, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Gets the task summary counts that match the provided filter criteria.
+    /// </summary>
+    /// <param name="query">The optional task filters.</param>
+    /// <param name="cancellationToken">Cancels the operation when the request is aborted.</param>
+    /// <returns>The task summary counts for the request.</returns>
+    Task<TaskSummaryDto> GetTaskSummaryAsync(GetTasksQueryDto query, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Gets a task by identifier.
     /// </summary>
     /// <param name="taskId">The task identifier.</param>

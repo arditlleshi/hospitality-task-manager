@@ -43,7 +43,7 @@
             (click)="dismissBanner()"
           >
             <span class="task-banner__dismiss-label">Dismiss</span>
-            <span class="task-banner__dismiss-mark" aria-hidden="true">×</span>
+            <app-icon name="x" [size]="16" />
           </button>
         </div>
       </article>
@@ -86,65 +86,94 @@
             {{ taskBoardHeading() }}
           </h2>
         </div>
-        <p class="max-w-92 text-[0.86rem] leading-[1.52] text-(--muted-foreground) text-pretty">
-          Filter by workflow, narrow by department, and search by title or detail.
-        </p>
+        <fieldset class="task-mode-shell task-mode-shell--header max-w-92">
+          <legend class="task-mode-label">Task Form Presentation</legend>
+
+          <div class="task-mode-grid" role="radiogroup" aria-label="Task form presentation">
+            @for (option of presentationOptions; track option.value) {
+              <label
+                class="task-mode-card"
+                [class.task-mode-card--selected]="presentationMode() === option.value"
+                [attr.for]="'task-mode-header-' + option.value.toLowerCase()"
+              >
+                <input
+                  [id]="'task-mode-header-' + option.value.toLowerCase()"
+                  class="task-mode-input visually-hidden"
+                  type="radio"
+                  name="taskPresentationMode"
+                  [value]="option.value"
+                  [checked]="presentationMode() === option.value"
+                  (change)="setPresentationMode(option.value)"
+                />
+
+                <span class="task-mode-card__content">
+                  <span class="task-mode-card__head">
+                    <span class="task-mode-card__indicator" aria-hidden="true"></span>
+                    <span class="task-mode-card__title">{{ option.title }}</span>
+                  </span>
+                </span>
+              </label>
+            }
+          </div>
+        </fieldset>
       </header>
 
       <form
         aria-label="Task filters"
-        class="mt-4 grid gap-3 rounded-[1.3rem] border border-(--line) bg-(--filter-surface) p-3.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.1fr)_13rem] lg:items-end"
+        class="mt-4 grid gap-3.5 rounded-[1.3rem] border border-(--line) bg-(--filter-surface) p-3.5"
         (submit)="$event.preventDefault()"
       >
-        <label class="group block">
-          <span
-            class="mb-1.5 block text-[0.69rem] font-bold uppercase tracking-[0.12em] text-(--accent-text-strong)"
-            >Search</span
-          >
-          <div class="relative">
-            <input
-              #searchInput
-              type="search"
-              name="search"
-              autocomplete="off"
-              enterkeyhint="search"
-              placeholder="Search tasks or notes&hellip;"
-              [value]="searchDraft()"
-              (input)="updateSearch(searchInput.value)"
-              class="task-search-input min-h-11 w-full rounded-[1.1rem] border border-(--input) bg-(--background) px-3.5 pr-10 py-2.5 text-[1rem] text-(--foreground) transition-[border-color,background-color,transform] duration-200 placeholder:text-(--soft-ink) focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-(--ring) md:min-h-10 md:text-[0.95rem] motion-reduce:transition-none"
-            />
+        <div class="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.1fr)_13rem] lg:items-end">
+          <label class="group block">
+            <span
+              class="mb-1.5 block text-[0.69rem] font-bold uppercase tracking-[0.12em] text-(--accent-text-strong)"
+              >Search</span
+            >
+            <div class="relative">
+              <input
+                #searchInput
+                type="search"
+                name="search"
+                autocomplete="off"
+                enterkeyhint="search"
+                placeholder="Search tasks or notes&hellip;"
+                [value]="searchDraft()"
+                (input)="updateSearch(searchInput.value)"
+                class="task-search-input min-h-11 w-full rounded-[1.1rem] border border-(--input) bg-(--background) px-3.5 pr-10 py-2.5 text-[1rem] text-(--foreground) transition-[border-color,background-color,transform] duration-200 placeholder:text-(--soft-ink) focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-(--ring) md:min-h-10 md:text-[0.95rem] motion-reduce:transition-none"
+              />
 
-            @if (searchDraft()) {
-              <button
-                type="button"
-                class="absolute inset-y-0 right-1.5 my-auto inline-flex h-8 w-8 items-center justify-center rounded-full text-(--soft-ink) opacity-0 transition hover:bg-(--secondary) hover:text-(--foreground) group-hover:opacity-100 group-focus-within:opacity-100"
-                aria-label="Clear search"
-                title="Clear search"
-                (click)="clearSearch(searchInput)"
-              >
-                <app-icon name="x" [size]="16" />
-              </button>
-            }
-          </div>
-        </label>
+              @if (searchDraft()) {
+                <button
+                  type="button"
+                  class="absolute inset-y-0 right-1.5 my-auto inline-flex h-8 w-8 items-center justify-center rounded-full text-(--soft-ink) opacity-0 transition hover:bg-(--secondary) hover:text-(--foreground) group-hover:opacity-100 group-focus-within:opacity-100"
+                  aria-label="Clear search"
+                  title="Clear search"
+                  (click)="clearSearch(searchInput)"
+                >
+                  <app-icon name="x" [size]="16" />
+                </button>
+              }
+            </div>
+          </label>
 
-        <app-dropdown
-          label="Status"
-          name="statusFilter"
-          [options]="statusFilterOptions"
-          [value]="statusFilter()"
-          [defaultValue]="'All'"
-          (valueChange)="setStatusFilter($any($event))"
-        />
+          <app-dropdown
+            label="Status"
+            name="statusFilter"
+            [options]="statusFilterOptions"
+            [value]="statusFilter()"
+            [defaultValue]="'All'"
+            (valueChange)="setStatusFilter($any($event))"
+          />
 
-        <app-dropdown
-          label="Department"
-          name="departmentFilter"
-          [options]="departmentFilterOptions"
-          [value]="departmentFilter()"
-          [defaultValue]="'All'"
-          (valueChange)="setDepartmentFilter($any($event))"
-        />
+          <app-dropdown
+            label="Department"
+            name="departmentFilter"
+            [options]="departmentFilterOptions"
+            [value]="departmentFilter()"
+            [defaultValue]="'All'"
+            (valueChange)="setDepartmentFilter($any($event))"
+          />
+        </div>
       </form>
 
       @if (error()) {
@@ -232,36 +261,15 @@
                     <app-icon name="update" [size]="18" />
                     <span>Edit</span>
                   </button>
-
-                  @if (pendingDeletionId() === task.id) {
-                    <div
-                      aria-live="polite"
-                      class="flex flex-wrap items-center gap-2 rounded-full border border-(--accent-soft-border) bg-(--accent-soft) px-3 py-2 text-[0.82rem] text-(--accent-text-strong)"
-                    >
-                      <span>Delete this task?</span>
-                      <button
-                        type="button"
-                        class="btn btn-danger gap-1.5"
-                        (click)="confirmDelete(task)"
-                      >
-                        <app-icon name="delete" [size]="18" />
-                        Confirm Delete
-                      </button>
-                      <button type="button" class="btn btn-ghost" (click)="clearDeleteRequest()">
-                        Keep Task
-                      </button>
-                    </div>
-                  } @else {
-                    <button
-                      type="button"
-                      class="btn btn-ghost gap-1.5"
-                      [attr.aria-label]="'Delete task ' + task.title"
-                      (click)="requestDelete(task.id)"
-                    >
-                      <app-icon name="delete" [size]="18" />
-                      <span>Delete</span>
-                    </button>
-                  }
+                  <button
+                    type="button"
+                    class="btn btn-ghost gap-1.5"
+                    [attr.aria-label]="'Delete task ' + task.title"
+                    (click)="requestDelete(task.id)"
+                  >
+                    <app-icon name="delete" [size]="18" />
+                    <span>Delete</span>
+                  </button>
                 </div>
               </article>
             </li>
@@ -291,6 +299,58 @@
       }
     </div>
   </section>
+
+  @if (taskEditorTarget(); as editor) {
+    <app-task-editor-modal
+      [taskId]="editor.kind === 'create' ? null : editor.taskId"
+      (closed)="closeTaskEditor()"
+      (saved)="handleTaskEditorSaved($event)"
+      (taskMissing)="handleTaskEditorMissing($event)"
+    />
+  }
+
+  @if (pendingDeletionTask(); as task) {
+    <app-dialog
+      [open]="true"
+      title="Delete task?"
+      description="This will remove the task from the board. The action cannot be undone."
+      tone="danger"
+      size="md"
+      closeLabel="Close delete dialog"
+      (closed)="clearDeleteRequest()"
+    >
+      <div dialog-body>
+        <div class="grid gap-3">
+          <div class="rounded-[1.1rem] border border-(--accent-soft-border) bg-(--accent-soft) p-4">
+            <p class="text-[0.69rem] font-bold uppercase tracking-[0.18em] text-(--accent-text-strong)">
+              Selected task
+            </p>
+            <p class="mt-2 text-[1.05rem] font-semibold text-(--foreground)">
+              {{ task.title }}
+            </p>
+            <p class="mt-1 text-[0.88rem] text-(--muted-foreground)">
+              {{ task.department }} &middot; {{ statusLabel(task.status) }}
+            </p>
+          </div>
+
+          <p class="text-[0.92rem] leading-[1.55] text-(--muted-foreground)">
+            Keep Task will dismiss this dialog without changing anything.
+          </p>
+        </div>
+      </div>
+
+      <div dialog-actions class="flex flex-wrap justify-end gap-2.5">
+        <button type="button" class="btn btn-secondary" (click)="clearDeleteRequest()">
+          Keep Task
+        </button>
+
+        <button type="button" class="btn btn-danger gap-1.5" (click)="confirmDelete(task)">
+          <app-icon name="delete" [size]="18" />
+          Confirm Delete
+        </button>
+      </div>
+    </app-dialog>
+  }
 
   <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
 </main>

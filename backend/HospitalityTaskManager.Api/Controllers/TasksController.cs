@@ -31,6 +31,22 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
     }
 
     /// <summary>
+    /// Gets the summary counts for tasks that match the provided filters.
+    /// </summary>
+    /// <param name="query">The optional task filters.</param>
+    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
+    /// <returns>The task summary counts.</returns>
+    [HttpGet("summary")]
+    [ProducesResponseType<TaskSummaryDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<TaskSummaryDto>> GetTaskSummaryAsync(
+        [FromQuery] GetTasksQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        var summary = await _taskService.GetTaskSummaryAsync(query, cancellationToken).ConfigureAwait(false);
+        return Ok(summary);
+    }
+
+    /// <summary>
     /// Gets a task by identifier.
     /// </summary>
     /// <param name="taskId">The task identifier.</param>

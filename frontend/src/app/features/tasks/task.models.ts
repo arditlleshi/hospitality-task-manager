@@ -32,6 +32,13 @@ export type TaskListQuery = {
   readonly search?: string;
 };
 
+export type TaskSummary = {
+  readonly totalTasks: number;
+  readonly openTasks: number;
+  readonly inProgressTasks: number;
+  readonly completedTasks: number;
+};
+
 export type TaskDraft = {
   readonly title: string;
   readonly description: string;

@@ -30,26 +30,7 @@ public sealed class TaskService(
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        var tasksQuery = _dbContext.Tasks.AsNoTracking().AsQueryable();
-
-        if (query.Status is not null)
-        {
-            tasksQuery = tasksQuery.Where(task => task.Status == query.Status.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.Department))
-        {
-            var normalizedDepartment = TaskCatalog.NormalizeDepartment(query.Department);
-            tasksQuery = tasksQuery.Where(task => task.Department == normalizedDepartment);
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            var searchTerm = $"%{query.Search.Trim()}%";
-            tasksQuery = tasksQuery.Where(task =>
-                EF.Functions.Like(task.Title, searchTerm) ||
-                (task.Description != null && EF.Functions.Like(task.Description, searchTerm)));
-        }
+        var tasksQuery = BuildFilteredTasksQuery(query);
 
         var tasks = await tasksQuery
             .OrderBy(task => task.DueDate ?? DateTime.MaxValue)
@@ -60,6 +41,36 @@ public sealed class TaskService(
         _logger.LogInformation("Returned {TaskCount} tasks.", tasks.Count);
 
         return tasks.Select(MapToDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<TaskSummaryDto> GetTaskSummaryAsync(
+        GetTasksQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var tasksQuery = BuildFilteredTasksQuery(query);
+
+        var summary = await tasksQuery
+            .GroupBy(_ => 1)
+            .Select(group => new TaskSummaryDto
+            {
+                TotalTasks = group.Count(),
+                OpenTasks = group.Count(task => task.Status == TaskItemStatus.Open),
+                InProgressTasks = group.Count(task => task.Status == TaskItemStatus.InProgress),
+                CompletedTasks = group.Count(task => task.Status == TaskItemStatus.Done),
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return summary ?? new TaskSummaryDto
+        {
+            TotalTasks = 0,
+            OpenTasks = 0,
+            InProgressTasks = 0,
+            CompletedTasks = 0,
+        };
     }
 
     /// <summary>
@@ -186,4 +197,30 @@ public sealed class TaskService(
 
     private static string? NormalizeOptionalText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private IQueryable<TaskItem> BuildFilteredTasksQuery(GetTasksQueryDto query)
+    {
+        var tasksQuery = _dbContext.Tasks.AsNoTracking().AsQueryable();
+
+        if (query.Status is not null)
+        {
+            tasksQuery = tasksQuery.Where(task => task.Status == query.Status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Department))
+        {
+            var normalizedDepartment = TaskCatalog.NormalizeDepartment(query.Department);
+            tasksQuery = tasksQuery.Where(task => task.Department == normalizedDepartment);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var searchTerm = $"%{query.Search.Trim()}%";
+            tasksQuery = tasksQuery.Where(task =>
+                EF.Functions.Like(task.Title, searchTerm) ||
+                (task.Description != null && EF.Functions.Like(task.Description, searchTerm)));
+        }
+
+        return tasksQuery;
+    }
 }

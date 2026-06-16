@@ -1,0 +1,21 @@
+<app-dialog
+  [open]="true"
+  [title]="taskId() ? 'Edit Task Details' : 'Create a New Task'"
+  [description]="
+    taskId()
+      ? 'Update the task details, save your changes, and return to the operational board.'
+      : 'Log a new operational task with the same workflow options used by the dashboard.'
+  "
+  size="lg"
+  closeLabel="Close task editor"
+  (closed)="closed.emit()"
+>
+  <div dialog-body>
+    <app-task-editor-form
+      [taskId]="taskId()"
+      (cancelled)="closed.emit()"
+      (saved)="saved.emit($event)"
+      (taskMissing)="taskMissing.emit($event)"
+    />
+  </div>
+</app-dialog>

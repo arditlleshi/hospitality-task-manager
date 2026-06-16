@@ -12,8 +12,6 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { Icon } from '../icon/icon';
-
 export type DropdownOption = {
   readonly value: string;
   readonly label: string;
@@ -23,7 +21,6 @@ export type DropdownOption = {
 @Component({
   selector: 'app-dropdown',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
 })
@@ -39,7 +36,6 @@ export class Dropdown {
   readonly hint = input<string | null>(null);
   readonly disabled = input(false);
   readonly invalid = input(false);
-  readonly clearable = input(true);
   readonly defaultValue = input<string | null>(null);
 
   readonly valueChange = output<string>();
@@ -59,13 +55,6 @@ export class Dropdown {
   protected readonly menuId = computed(() => `${this.selectId()}-menu`);
   protected readonly hintId = computed(() => `${this.selectId()}-hint`);
   protected readonly hasSelection = computed(() => this.selectedOption() !== null);
-  protected readonly showClearButton = computed(
-    () =>
-      this.clearable() &&
-      this.hasSelection() &&
-      this.value() !== this.defaultValue(),
-  );
-  protected readonly clearButtonLabel = computed(() => `Clear selected ${this.label()}`);
   protected readonly selectedOption = computed(
     () => this.options().find((option) => option.value === this.value()) ?? null,
   );
@@ -135,18 +124,6 @@ export class Dropdown {
     if (restoreFocus) {
       queueMicrotask(() => this.triggerButton().nativeElement.focus());
     }
-  }
-
-  protected clearSelection(event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (this.disabled()) {
-      return;
-    }
-
-    this.valueChange.emit('');
-    this.close(true);
   }
 
   protected selectOption(option: DropdownOption): void {

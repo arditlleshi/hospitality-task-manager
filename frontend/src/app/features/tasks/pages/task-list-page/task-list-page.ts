@@ -11,6 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { TaskStore } from '../../task-store';
+import { TaskEditorModal } from '../../components/task-editor-modal/task-editor-modal';
 import {
   TASK_DEPARTMENTS,
   TASK_STATUSES,
@@ -18,16 +19,31 @@ import {
   TaskItem,
   TaskStatus,
 } from '../../task.models';
+import { Dialog } from '../../../../shared/components/dialog/dialog';
 import { Dropdown, type DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Icon } from '../../../../shared/components/icon/icon';
 
 type TaskStatusFilter = TaskStatus | 'All';
 type TaskDepartmentFilter = TaskDepartment | 'All';
+type TaskPresentationMode = 'Modal' | 'Page';
+type TaskEditorTarget =
+  | {
+      readonly kind: 'create';
+    }
+  | {
+      readonly kind: 'edit';
+      readonly taskId: number;
+    };
 
 type SummaryCard = {
   readonly label: string;
   readonly value: string;
   readonly tone: 'sand' | 'ink' | 'olive' | 'wine';
+};
+
+type PresentationOption = {
+  readonly value: TaskPresentationMode;
+  readonly title: string;
 };
 
 type PageBanner = {
@@ -38,7 +54,7 @@ type PageBanner = {
 @Component({
   selector: 'app-task-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown, Icon],
+  imports: [Dialog, Dropdown, Icon, TaskEditorModal],
   templateUrl: './task-list-page.html',
   styleUrl: './task-list-page.scss',
 })
@@ -58,6 +74,16 @@ export class TaskListPage {
     { value: 'All', label: 'All departments' },
     ...TASK_DEPARTMENTS.map((department) => ({ value: department, label: department })),
   ];
+  protected readonly presentationOptions: readonly PresentationOption[] = [
+    {
+      value: 'Modal',
+      title: 'Modal',
+    },
+    {
+      value: 'Page',
+      title: 'Page',
+    },
+  ];
 
   protected readonly pendingDeletionId = signal<number | null>(null);
   protected readonly announcement = signal('Task board ready.');
@@ -73,38 +99,72 @@ export class TaskListPage {
   protected readonly departmentFilter = computed<TaskDepartmentFilter>(() =>
     normalizeDepartmentFilter(this.queryParamMap().get('department')),
   );
+  protected readonly presentationMode = computed<TaskPresentationMode>(() =>
+    normalizePresentationMode(this.queryParamMap().get('mode')),
+  );
+  protected readonly taskEditorTarget = computed<TaskEditorTarget | null>(() =>
+    normalizeTaskEditorTarget(this.queryParamMap().get('editor')),
+  );
   protected readonly searchQuery = computed(() => this.queryParamMap().get('search')?.trim() ?? '');
   protected readonly searchDraft = signal(this.searchQuery());
   protected readonly normalizedSearchDraft = computed(() => this.searchDraft().trim());
 
   protected readonly summaryCards = computed<readonly SummaryCard[]>(() => {
-    const tasks = this.tasks();
+    const summary = this.taskStore.summary();
+
+    if (summary) {
+      return [
+        {
+          label: 'Total Tasks',
+          value: integerFormatter.format(summary.totalTasks),
+          tone: 'sand',
+        },
+        {
+          label: 'Open Now',
+          value: integerFormatter.format(summary.openTasks),
+          tone: 'ink',
+        },
+        {
+          label: 'In Progress',
+          value: integerFormatter.format(summary.inProgressTasks),
+          tone: 'olive',
+        },
+        {
+          label: 'Completed',
+          value: integerFormatter.format(summary.completedTasks),
+          tone: 'wine',
+        },
+      ];
+    }
 
     return [
       {
         label: 'Total Tasks',
-        value: integerFormatter.format(tasks.length),
+        value: '-',
         tone: 'sand',
       },
       {
         label: 'Open Now',
-        value: integerFormatter.format(countByStatus(tasks, 'Open')),
+        value: '-',
         tone: 'ink',
       },
       {
         label: 'In Progress',
-        value: integerFormatter.format(countByStatus(tasks, 'InProgress')),
+        value: '-',
         tone: 'olive',
       },
       {
         label: 'Completed',
-        value: integerFormatter.format(countByStatus(tasks, 'Done')),
+        value: '-',
         tone: 'wine',
       },
     ];
   });
 
   protected readonly visibleTasks = computed(() => this.tasks());
+  protected readonly pendingDeletionTask = computed(
+    () => this.tasks().find((task) => task.id === this.pendingDeletionId()) ?? null,
+  );
 
   protected readonly taskBoardHeading = computed(() => {
     const count = this.visibleTasks().length;
@@ -113,6 +173,7 @@ export class TaskListPage {
 
   constructor() {
     this.captureNavigationState();
+    void this.taskStore.loadSummary();
 
     effect(() => {
       const nextSearch = this.searchQuery();
@@ -134,6 +195,7 @@ export class TaskListPage {
         this.syncQueryState({
           status: this.statusFilter(),
           department: this.departmentFilter(),
+          presentationMode: this.presentationMode(),
           search,
         });
       }, 300);
@@ -150,6 +212,12 @@ export class TaskListPage {
 
       void this.taskStore.loadTasks(query);
     });
+
+    effect(() => {
+      if (this.presentationMode() === 'Page' && this.taskEditorTarget()) {
+        this.closeTaskEditor();
+      }
+    });
   }
 
   protected dismissBanner(): void {
@@ -159,19 +227,62 @@ export class TaskListPage {
 
   protected retryLoad(): void {
     this.taskStore.clearError();
-    void this.taskStore.loadTasks(this.currentTaskListQuery());
+    const query = this.currentTaskListQuery();
+    void this.taskStore.loadTasks(query);
+    void this.taskStore.loadSummary();
   }
 
   protected navigateToCreate(): void {
+    if (this.presentationMode() === 'Modal') {
+      this.openTaskEditor({ kind: 'create' });
+      return;
+    }
+
     void this.router.navigate(['/tasks/new'], {
       queryParams: this.route.snapshot.queryParams,
     });
   }
 
   protected navigateToEdit(taskId: number): void {
+    if (this.presentationMode() === 'Modal') {
+      this.openTaskEditor({ kind: 'edit', taskId });
+      return;
+    }
+
     void this.router.navigate(['/tasks', taskId, 'edit'], {
       queryParams: this.route.snapshot.queryParams,
     });
+  }
+
+  protected closeTaskEditor(): void {
+    const queryParams = { ...this.route.snapshot.queryParams };
+    delete queryParams['editor'];
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams,
+    });
+  }
+
+  protected handleTaskEditorSaved(result: { readonly title: string; readonly isEdit: boolean }): void {
+    this.closeTaskEditor();
+    void this.taskStore.loadTasks(this.currentTaskListQuery());
+    void this.taskStore.loadSummary();
+    this.pageBanner.set({
+      message: result.isEdit ? `Saved changes to ${result.title}.` : `Created ${result.title}.`,
+      tone: 'success',
+    });
+    this.announcement.set(result.isEdit ? `Saved changes to ${result.title}.` : `Created ${result.title}.`);
+  }
+
+  protected handleTaskEditorMissing(message: string): void {
+    this.closeTaskEditor();
+    this.pageBanner.set({
+      message,
+      tone: 'error',
+    });
+    this.announcement.set(message);
   }
 
   protected requestDelete(taskId: number): void {
@@ -192,6 +303,7 @@ export class TaskListPage {
       return;
     }
 
+    void this.taskStore.loadSummary();
     this.pendingDeletionId.set(null);
     this.announcement.set(`Deleted ${task.title}.`);
     this.pageBanner.set({
@@ -209,6 +321,7 @@ export class TaskListPage {
     this.syncQueryState({
       status: this.statusFilter(),
       department: this.departmentFilter(),
+      presentationMode: this.presentationMode(),
       search: '',
     });
     queueMicrotask(() => searchInput.focus());
@@ -218,6 +331,7 @@ export class TaskListPage {
     this.syncQueryState({
       status: normalizeStatusSelection(status),
       department: this.departmentFilter(),
+      presentationMode: this.presentationMode(),
       search: this.normalizedSearchDraft(),
     });
   }
@@ -226,7 +340,27 @@ export class TaskListPage {
     this.syncQueryState({
       status: this.statusFilter(),
       department: normalizeDepartmentSelection(department),
+      presentationMode: this.presentationMode(),
       search: this.normalizedSearchDraft(),
+    });
+  }
+
+  protected setPresentationMode(mode: TaskPresentationMode): void {
+    this.syncQueryState({
+      status: this.statusFilter(),
+      department: this.departmentFilter(),
+      presentationMode: mode,
+      search: this.normalizedSearchDraft(),
+    });
+  }
+
+  private openTaskEditor(target: TaskEditorTarget): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        ...this.route.snapshot.queryParams,
+        editor: target.kind === 'create' ? 'create' : String(target.taskId),
+      },
     });
   }
 
@@ -359,6 +493,7 @@ export class TaskListPage {
   private syncQueryState(filters: {
     readonly status: TaskStatusFilter;
     readonly department: TaskDepartmentFilter;
+    readonly presentationMode: TaskPresentationMode;
     readonly search: string;
   }): void {
     void this.router.navigate([], {
@@ -367,6 +502,7 @@ export class TaskListPage {
       queryParams: {
         status: filters.status === 'All' ? null : filters.status,
         department: filters.department === 'All' ? null : filters.department,
+        mode: filters.presentationMode === 'Page' ? 'page' : null,
         search: filters.search.trim() ? filters.search.trim() : null,
       },
     });
@@ -397,10 +533,6 @@ const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
 
 const integerFormatter = new Intl.NumberFormat('en-US');
 
-function countByStatus(tasks: readonly TaskItem[], status: TaskStatus): number {
-  return tasks.filter((task) => task.status === status).length;
-}
-
 function normalizeStatusFilter(value: string | null): TaskStatusFilter {
   return TASK_STATUSES.includes(value as TaskStatus) ? (value as TaskStatus) : 'All';
 }
@@ -415,6 +547,23 @@ function normalizeStatusSelection(value: TaskStatusFilter | ''): TaskStatusFilte
 
 function normalizeDepartmentSelection(value: TaskDepartmentFilter | ''): TaskDepartmentFilter {
   return value === '' ? 'All' : value;
+}
+
+function normalizePresentationMode(value: string | null): TaskPresentationMode {
+  return value === 'page' ? 'Page' : 'Modal';
+}
+
+function normalizeTaskEditorTarget(value: string | null): TaskEditorTarget | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value === 'create') {
+    return { kind: 'create' };
+  }
+
+  const taskId = Number(value);
+  return Number.isInteger(taskId) && taskId > 0 ? { kind: 'edit', taskId } : null;
 }
 
 function createTaskListQuery(filters: {

@@ -13,7 +13,6 @@
         class="dropdown__trigger"
         data-dropdown-trigger
         [class.dropdown__trigger--invalid]="invalid()"
-        [class.dropdown__trigger--clearable]="showClearButton()"
         [id]="selectId()"
         [disabled]="disabled()"
         [attr.aria-haspopup]="'listbox'"
@@ -30,19 +29,6 @@
 
         <span class="dropdown__chevron" aria-hidden="true"></span>
       </button>
-
-      @if (showClearButton()) {
-        <button
-          type="button"
-          class="dropdown__clear"
-          [disabled]="disabled()"
-          [attr.aria-label]="clearButtonLabel()"
-          title="Clear selection"
-          (click)="clearSelection($event)"
-        >
-          <app-icon name="x" [size]="16" />
-        </button>
-      }
     </div>
 
     <input type="hidden" [name]="name()" [value]="value()" />

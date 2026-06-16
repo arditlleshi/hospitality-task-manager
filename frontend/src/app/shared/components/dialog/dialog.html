@@ -1,0 +1,45 @@
+<dialog
+  #dialog
+  class="app-dialog"
+  [class.app-dialog--danger]="tone() === 'danger'"
+  [class.app-dialog--sm]="size() === 'sm'"
+  [class.app-dialog--md]="size() === 'md'"
+  [class.app-dialog--lg]="size() === 'lg'"
+  [attr.aria-labelledby]="titleId"
+  [attr.aria-describedby]="description() ? descriptionId : null"
+  (click)="onDialogClick($event)"
+  (close)="onDialogClose()"
+>
+  <section class="app-dialog__surface">
+    <header class="app-dialog__header">
+      <div class="app-dialog__heading">
+        <h2 class="app-dialog__title" [id]="titleId">{{ title() }}</h2>
+
+        @if (description(); as dialogDescription) {
+          <p class="app-dialog__description" [id]="descriptionId">
+            {{ dialogDescription }}
+          </p>
+        }
+      </div>
+
+      @if (dismissible()) {
+        <button
+          type="button"
+          class="app-dialog__close btn btn-ghost"
+          [attr.aria-label]="closeLabel()"
+          (click)="requestClose()"
+        >
+          <app-icon name="x" [size]="16" />
+        </button>
+      }
+    </header>
+
+    <div class="app-dialog__body">
+      <ng-content select="[dialog-body]"></ng-content>
+    </div>
+
+    <footer class="app-dialog__footer">
+      <ng-content select="[dialog-actions]"></ng-content>
+    </footer>
+  </section>
+</dialog>

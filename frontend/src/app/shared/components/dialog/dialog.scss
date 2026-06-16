@@ -1,0 +1,201 @@
+:host {
+  display: block;
+}
+
+dialog.app-dialog {
+  --dialog-max-width: 34rem;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0.75rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+dialog.app-dialog--sm {
+  --dialog-max-width: 28rem;
+}
+
+dialog.app-dialog--md {
+  --dialog-max-width: 34rem;
+}
+
+dialog.app-dialog--lg {
+  --dialog-max-width: 42rem;
+}
+
+dialog.app-dialog::backdrop {
+  background:
+    radial-gradient(circle at top, color-mix(in oklab, var(--primary) 10%, transparent), transparent 56%),
+    color-mix(in oklab, var(--backdrop) 82%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+dialog.app-dialog[open] {
+  display: grid;
+}
+
+.app-dialog__surface {
+  width: min(100%, var(--dialog-max-width));
+  max-height: min(calc(100dvh - 1rem), 52rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 1.5rem;
+  background: var(--dialog-surface);
+  box-shadow: 0 1.3rem 2.4rem var(--shadow-strong);
+  animation: dialog-enter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-dialog--danger .app-dialog__surface {
+  border-color: color-mix(in oklab, var(--destructive) 22%, var(--line-strong));
+}
+
+.app-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.2rem 1rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, white 28%, transparent),
+      color-mix(in oklab, white 0%, transparent)
+    );
+}
+
+.app-dialog__heading {
+  min-width: 0;
+}
+
+.app-dialog__eyebrow {
+  margin-bottom: 0.35rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--accent-text-strong);
+}
+
+.app-dialog__title {
+  font-size: clamp(1.45rem, 1.2rem + 0.55vw, 1.95rem);
+  line-height: 1.05;
+}
+
+.app-dialog__description {
+  margin-top: 0.55rem;
+  max-width: 52ch;
+  font-size: 0.93rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+
+.app-dialog__close {
+  flex: none;
+  min-height: 2.4rem;
+  min-width: 2.4rem;
+  padding-inline: 0;
+  border-color: var(--line);
+  background: color-mix(in oklab, var(--background) 92%, transparent);
+}
+
+.app-dialog__close:hover {
+  border-color: var(--accent-soft-border);
+  background: color-mix(in oklab, var(--background) 98%, transparent);
+}
+
+.app-dialog__body,
+.app-dialog__footer {
+  padding-inline: 1.2rem;
+}
+
+.app-dialog__body {
+  display: grid;
+  gap: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 0.95rem;
+  overflow: visible;
+}
+
+.app-dialog__footer {
+  padding-bottom: 1.2rem;
+}
+
+.app-dialog__footer:empty {
+  display: none;
+}
+
+.app-dialog--danger .app-dialog__eyebrow {
+  color: var(--destructive-text-strong);
+}
+
+.app-dialog--danger .app-dialog__title {
+  color: color-mix(in oklab, var(--foreground) 88%, var(--destructive));
+}
+
+@media (max-width: 40rem) {
+  dialog.app-dialog {
+    padding: 0.5rem;
+  }
+
+  .app-dialog__surface {
+    width: min(100%, var(--dialog-max-width));
+  }
+
+  .app-dialog__header,
+  .app-dialog__body,
+  .app-dialog__footer {
+    padding-inline: 1rem;
+  }
+
+  .app-dialog__header {
+    padding-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.app-dialog::backdrop {
+    animation: dialog-backdrop-enter 180ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-dialog__surface,
+  dialog.app-dialog::backdrop {
+    animation: none;
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialog-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

@@ -429,6 +429,20 @@ GET /api/tasks?department=Housekeeping
 GET /api/tasks?search=room
 ```
 
+### Get task summary
+
+```txt
+GET /api/tasks/summary
+```
+
+Optional query params:
+
+```txt
+GET /api/tasks/summary?status=Open
+GET /api/tasks/summary?department=Housekeeping
+GET /api/tasks/summary?search=room
+```
+
 ### Get task by id
 
 ```txt
@@ -824,6 +838,7 @@ Both are fine. For two days, choose the simpler one.
 Responsibilities:
 
 - Load tasks from API.
+- Load summary cards from a separate API endpoint.
 - Display tasks in a table.
 - Filter tasks by status.
 - Delete a task.
@@ -857,6 +872,11 @@ export class TaskService {
   getTasks(status?: string): Observable<TaskItem[]> {
     const params = status && status !== 'All' ? { status } : {};
     return this.http.get<TaskItem[]>(this.apiUrl, { params });
+  }
+
+  getTaskSummary(status?: string): Observable<TaskSummary> {
+    const params = status && status !== 'All' ? { status } : {};
+    return this.http.get<TaskSummary>(`${this.apiUrl}/summary`, { params });
   }
 
   getTaskById(id: number): Observable<TaskItem> {
@@ -900,6 +920,13 @@ export interface TaskItem {
 
 export type TaskStatus = 'Open' | 'InProgress' | 'Done' | 'Cancelled';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+
+export interface TaskSummary {
+  totalTasks: number;
+  openTasks: number;
+  inProgressTasks: number;
+  completedTasks: number;
+}
 
 export interface CreateTaskPayload {
   title: string;
@@ -1338,3 +1365,5 @@ The best final version should include:
 This is enough.
 
 A small complete app is better than a large unfinished app.
+
+run the backend from root: dotnet run --project backend/HospitalityTaskManager.Api/HospitalityTaskManager.Api.csproj
