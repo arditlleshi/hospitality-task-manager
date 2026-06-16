@@ -6,28 +6,44 @@
   <span class="dropdown__label" [id]="labelId()">{{ label() }}</span>
 
   <div class="dropdown__field">
-    <button
-      #trigger
-      type="button"
-      class="dropdown__trigger"
-      data-dropdown-trigger
-      [class.dropdown__trigger--invalid]="invalid()"
-      [id]="selectId()"
-      [disabled]="disabled()"
-      [attr.aria-haspopup]="'listbox'"
-      [attr.aria-expanded]="isOpen()"
-      [attr.aria-controls]="menuId()"
-      [attr.aria-labelledby]="labelId() + ' ' + selectId()"
-      [attr.aria-describedby]="hint() ? hintId() : null"
-      (click)="toggle()"
-      (keydown)="onTriggerKeydown($event)"
-    >
-      <span class="dropdown__value" [class.dropdown__value--placeholder]="!hasSelection()">
-        {{ displayValue() }}
-      </span>
+    <div #control class="dropdown__control">
+      <button
+        #trigger
+        type="button"
+        class="dropdown__trigger"
+        data-dropdown-trigger
+        [class.dropdown__trigger--invalid]="invalid()"
+        [class.dropdown__trigger--clearable]="showClearButton()"
+        [id]="selectId()"
+        [disabled]="disabled()"
+        [attr.aria-haspopup]="'listbox'"
+        [attr.aria-expanded]="isOpen()"
+        [attr.aria-controls]="menuId()"
+        [attr.aria-labelledby]="labelId() + ' ' + selectId()"
+        [attr.aria-describedby]="hint() ? hintId() : null"
+        (click)="toggle()"
+        (keydown)="onTriggerKeydown($event)"
+      >
+        <span class="dropdown__value" [class.dropdown__value--placeholder]="!hasSelection()">
+          {{ displayValue() }}
+        </span>
 
-      <span class="dropdown__chevron" aria-hidden="true"></span>
-    </button>
+        <span class="dropdown__chevron" aria-hidden="true"></span>
+      </button>
+
+      @if (showClearButton()) {
+        <button
+          type="button"
+          class="dropdown__clear"
+          [disabled]="disabled()"
+          [attr.aria-label]="clearButtonLabel()"
+          title="Clear selection"
+          (click)="clearSelection($event)"
+        >
+          <app-icon name="x" [size]="16" />
+        </button>
+      }
+    </div>
 
     <input type="hidden" [name]="name()" [value]="value()" />
 

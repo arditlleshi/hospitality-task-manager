@@ -12,6 +12,8 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { Icon } from '../icon/icon';
+
 export type DropdownOption = {
   readonly value: string;
   readonly label: string;
@@ -21,6 +23,7 @@ export type DropdownOption = {
 @Component({
   selector: 'app-dropdown',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Icon],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
 })
@@ -36,6 +39,8 @@ export class Dropdown {
   readonly hint = input<string | null>(null);
   readonly disabled = input(false);
   readonly invalid = input(false);
+  readonly clearable = input(true);
+  readonly defaultValue = input<string | null>(null);
 
   readonly valueChange = output<string>();
 
@@ -47,12 +52,20 @@ export class Dropdown {
   protected readonly menuMaxHeight = signal(0);
 
   protected readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
+  protected readonly controlContainer = viewChild.required<ElementRef<HTMLDivElement>>('control');
 
   protected readonly selectId = computed(() => this.id() || `${this.name()}-dropdown`);
   protected readonly labelId = computed(() => `${this.selectId()}-label`);
   protected readonly menuId = computed(() => `${this.selectId()}-menu`);
   protected readonly hintId = computed(() => `${this.selectId()}-hint`);
   protected readonly hasSelection = computed(() => this.selectedOption() !== null);
+  protected readonly showClearButton = computed(
+    () =>
+      this.clearable() &&
+      this.hasSelection() &&
+      this.value() !== this.defaultValue(),
+  );
+  protected readonly clearButtonLabel = computed(() => `Clear selected ${this.label()}`);
   protected readonly selectedOption = computed(
     () => this.options().find((option) => option.value === this.value()) ?? null,
   );
@@ -122,6 +135,18 @@ export class Dropdown {
     if (restoreFocus) {
       queueMicrotask(() => this.triggerButton().nativeElement.focus());
     }
+  }
+
+  protected clearSelection(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.disabled()) {
+      return;
+    }
+
+    this.valueChange.emit('');
+    this.close(true);
   }
 
   protected selectOption(option: DropdownOption): void {
@@ -247,16 +272,16 @@ export class Dropdown {
   }
 
   private updateMenuPosition(): void {
-    const triggerRect = this.triggerButton().nativeElement.getBoundingClientRect();
+    const controlRect = this.controlContainer().nativeElement.getBoundingClientRect();
     const viewportPadding = 12;
-    const menuWidth = Math.max(0, triggerRect.width);
+    const menuWidth = Math.max(0, controlRect.width);
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const left = Math.min(
-      Math.max(triggerRect.left, viewportPadding),
+      Math.max(controlRect.left, viewportPadding),
       Math.max(viewportPadding, viewportWidth - menuWidth - viewportPadding),
     );
-    const top = triggerRect.bottom + 6;
+    const top = controlRect.bottom + 6;
     const maxHeight = Math.max(viewportPadding * 2, viewportHeight - top - viewportPadding);
 
     this.menuLeft.set(left);

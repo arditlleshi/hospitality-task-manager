@@ -26,6 +26,12 @@ export type TaskItem = {
   readonly updatedAt?: string;
 };
 
+export type TaskListQuery = {
+  readonly status?: TaskStatus;
+  readonly department?: TaskDepartment;
+  readonly search?: string;
+};
+
 export type TaskDraft = {
   readonly title: string;
   readonly description: string;
@@ -55,4 +61,33 @@ export function createTaskDraft(task: TaskItem): TaskDraft {
     priority: task.priority,
     dueDate: task.dueDate ? task.dueDate.slice(0, 10) : '',
   };
+}
+
+export type TaskSaveRequest = {
+  readonly title: string;
+  readonly description?: string;
+  readonly department: TaskDepartment;
+  readonly status: TaskStatus;
+  readonly priority: TaskPriority;
+  readonly dueDate?: string;
+};
+
+export function createTaskSaveRequest(draft: TaskDraft): TaskSaveRequest {
+  return {
+    title: draft.title.trim(),
+    description: normalizeOptionalText(draft.description),
+    department: draft.department,
+    status: draft.status,
+    priority: draft.priority,
+    dueDate: normalizeOptionalDate(draft.dueDate),
+  };
+}
+
+function normalizeOptionalText(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function normalizeOptionalDate(value: string): string | undefined {
+  return value ? new Date(`${value}T09:00:00`).toISOString() : undefined;
 }
