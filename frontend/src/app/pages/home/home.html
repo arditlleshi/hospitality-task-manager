@@ -255,7 +255,21 @@
             aria-label="Close task dialog"
             (click)="closeTaskDialog()"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-x-icon lucide-x"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
           </button>
         </div>
 
@@ -368,18 +382,13 @@
               }
             </div>
 
-            <label class="grid gap-1.5">
-              <span
-                class="text-[0.69rem] font-bold uppercase tracking-[0.12em] text-(--accent-text-strong)"
-                >Due Date</span
-              >
-              <input
-                type="date"
-                autocomplete="off"
-                [formField]="taskForm.dueDate"
-                [class]="inputClasses(false)"
-              />
-            </label>
+            <app-date-picker
+              label="Due Date"
+              name="dueDate"
+              placeholder="Flexible"
+              [value]="draftModel().dueDate"
+              (valueChange)="setDraftDueDate($any($event))"
+            />
           </div>
 
           <div class="mt-1 flex flex-wrap justify-between gap-2.5 border-t border-(--line) pt-3.5">

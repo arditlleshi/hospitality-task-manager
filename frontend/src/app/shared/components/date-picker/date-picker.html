@@ -1,0 +1,106 @@
+<div
+  class="date-picker"
+  [attr.data-invalid]="invalid() ? 'true' : null"
+  [class.date-picker--open]="isOpen()"
+>
+  <span class="date-picker__label" [id]="labelId()">{{ label() }}</span>
+
+  <div class="date-picker__field">
+    <button
+      #trigger
+      type="button"
+      class="date-picker__trigger"
+      data-date-picker-trigger
+      [class.date-picker__trigger--invalid]="invalid()"
+      [id]="pickerId()"
+      [disabled]="disabled()"
+      [attr.aria-haspopup]="'dialog'"
+      [attr.aria-expanded]="isOpen()"
+      [attr.aria-controls]="menuId()"
+      [attr.aria-labelledby]="labelId() + ' ' + pickerId()"
+      [attr.aria-describedby]="hint() ? hintId() : null"
+      (click)="toggle()"
+      (keydown)="onTriggerKeydown($event)"
+    >
+      <span class="date-picker__value" [class.date-picker__value--placeholder]="!hasSelection()">
+        {{ displayValue() }}
+      </span>
+
+      <span class="date-picker__chevron" aria-hidden="true"></span>
+    </button>
+
+    <input type="hidden" [name]="name()" [value]="value()" />
+
+    @if (isOpen()) {
+      <div
+        class="date-picker__menu"
+        data-date-picker-menu
+        [class.date-picker__menu--invalid]="invalid()"
+        [id]="menuId()"
+        role="dialog"
+        aria-modal="false"
+        [style.top.px]="menuTop()"
+        [style.left.px]="menuLeft()"
+        [style.width.px]="menuWidth()"
+        [style.max-height.px]="menuMaxHeight()"
+        [attr.aria-labelledby]="labelId() + ' ' + pickerId()"
+        (keydown)="onMenuKeydown($event)"
+      >
+        <div class="date-picker__menu-header">
+          <button
+            type="button"
+            class="date-picker__nav"
+            (click)="previousMonth()"
+            aria-label="Previous month"
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+
+          <p class="date-picker__month">{{ monthLabel() }}</p>
+
+          <button
+            type="button"
+            class="date-picker__nav"
+            (click)="nextMonth()"
+            aria-label="Next month"
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+        </div>
+
+        <div class="date-picker__weekday-row" aria-hidden="true">
+          @for (weekday of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; track weekday) {
+            <span class="date-picker__weekday">{{ weekday }}</span>
+          }
+        </div>
+
+        <div class="date-picker__grid" role="grid" [attr.aria-label]="monthLabel()">
+          @for (week of weeks(); track $index) {
+            @for (day of week; track day.dateKey) {
+              <button
+                type="button"
+                class="date-picker__day"
+                data-date-key
+                [class.date-picker__day--outside]="!day.inMonth"
+                [class.date-picker__day--today]="day.isToday"
+                [class.date-picker__day--selected]="day.isSelected"
+                [class.is-active]="isActiveDay(day.dateKey)"
+                [id]="dayId(day.dateKey)"
+                [attr.data-date-key]="day.dateKey"
+                [attr.aria-selected]="day.isSelected"
+                [attr.aria-label]="day.label"
+                (click)="chooseDay(day)"
+              >
+                {{ day.dayNumber }}
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (hint()) {
+    <span class="date-picker__hint" [id]="hintId()">{{ hint() }}</span>
+  }
+</div>

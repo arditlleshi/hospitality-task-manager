@@ -25,6 +25,7 @@ import {
   createEmptyTaskDraft,
   createTaskDraft,
 } from '../../features/tasks/task.models';
+import { DatePicker } from '../../shared/components/date-picker/date-picker';
 import { Icon } from '../../shared/components/icon/icon';
 import { Dropdown, type DropdownOption } from '../../shared/components/dropdown/dropdown';
 
@@ -46,7 +47,7 @@ type FieldStateLike = {
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dropdown, FormField, Icon],
+  imports: [DatePicker, Dropdown, FormField, Icon],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -320,6 +321,10 @@ export class Home {
     this.draftModel.update((draft) => ({ ...draft, priority }));
   }
 
+  protected setDraftDueDate(dueDate: string): void {
+    this.draftModel.update((draft) => ({ ...draft, dueDate }));
+  }
+
   protected isEditingTask(taskId: number): boolean {
     return this.editorMode() === 'edit' && this.activeTaskId() === taskId;
   }
@@ -425,7 +430,7 @@ export class Home {
   private focusFirstInvalidField(): void {
     const host = this.hostElement.nativeElement as HTMLElement;
     const firstInvalidField = host.querySelector(
-      '[data-invalid="true"] input, [data-invalid="true"] select, [data-invalid="true"] textarea, [data-invalid="true"] [data-dropdown-trigger]',
+      '[data-invalid="true"] input, [data-invalid="true"] select, [data-invalid="true"] textarea, [data-invalid="true"] [data-dropdown-trigger], [data-invalid="true"] [data-date-picker-trigger]',
     ) as HTMLElement | null;
 
     firstInvalidField?.focus();
