@@ -96,22 +96,36 @@
         class="mt-4 grid gap-3 rounded-[1.3rem] border border-(--line) bg-(--filter-surface) p-3.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1.1fr)_13rem] lg:items-end"
         (submit)="$event.preventDefault()"
       >
-        <label class="block">
+        <label class="group block">
           <span
             class="mb-1.5 block text-[0.69rem] font-bold uppercase tracking-[0.12em] text-(--accent-text-strong)"
             >Search</span
           >
-          <input
-            #searchInput
-            type="search"
-            name="search"
-            autocomplete="off"
-            enterkeyhint="search"
-            placeholder="Search tasks or notes&hellip;"
-            [value]="searchDraft()"
-            (input)="updateSearch(searchInput.value)"
-            class="min-h-11 w-full rounded-[1.1rem] border border-(--input) bg-(--background) px-3.5 py-2.5 text-[1rem] text-(--foreground) transition-[border-color,background-color,transform] duration-200 placeholder:text-(--soft-ink) focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-(--ring) md:min-h-10 md:text-[0.95rem] motion-reduce:transition-none"
-          />
+          <div class="relative">
+            <input
+              #searchInput
+              type="search"
+              name="search"
+              autocomplete="off"
+              enterkeyhint="search"
+              placeholder="Search tasks or notes&hellip;"
+              [value]="searchDraft()"
+              (input)="updateSearch(searchInput.value)"
+              class="task-search-input min-h-11 w-full rounded-[1.1rem] border border-(--input) bg-(--background) px-3.5 pr-10 py-2.5 text-[1rem] text-(--foreground) transition-[border-color,background-color,transform] duration-200 placeholder:text-(--soft-ink) focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-(--ring) md:min-h-10 md:text-[0.95rem] motion-reduce:transition-none"
+            />
+
+            @if (searchDraft()) {
+              <button
+                type="button"
+                class="absolute inset-y-0 right-1.5 my-auto inline-flex h-8 w-8 items-center justify-center rounded-full text-(--soft-ink) opacity-0 transition hover:bg-(--secondary) hover:text-(--foreground) group-hover:opacity-100 group-focus-within:opacity-100"
+                aria-label="Clear search"
+                title="Clear search"
+                (click)="clearSearch(searchInput)"
+              >
+                <app-icon name="x" [size]="16" />
+              </button>
+            }
+          </div>
         </label>
 
         <app-dropdown

@@ -2,6 +2,17 @@
   display: block;
 }
 
+.task-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.task-search-input::-ms-clear {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .task-banner {
   position: relative;
   overflow: hidden;

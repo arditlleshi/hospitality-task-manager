@@ -204,6 +204,16 @@ export class TaskListPage {
     this.searchDraft.set(query);
   }
 
+  protected clearSearch(searchInput: HTMLInputElement): void {
+    this.searchDraft.set('');
+    this.syncQueryState({
+      status: this.statusFilter(),
+      department: this.departmentFilter(),
+      search: '',
+    });
+    queueMicrotask(() => searchInput.focus());
+  }
+
   protected setStatusFilter(status: TaskStatusFilter | ''): void {
     this.syncQueryState({
       status: normalizeStatusSelection(status),
