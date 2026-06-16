@@ -1,4 +1,13 @@
-import { ElementRef, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,6 +25,8 @@ import {
   createEmptyTaskDraft,
   createTaskDraft,
 } from '../../features/tasks/task.models';
+import { Icon } from '../../shared/components/icon/icon';
+import { Dropdown, type DropdownOption } from '../../shared/components/dropdown/dropdown';
 
 type TaskStatusFilter = TaskStatus | 'All';
 type TaskDepartmentFilter = TaskDepartment | 'All';
@@ -34,8 +45,10 @@ type FieldStateLike = {
 
 @Component({
   selector: 'app-home',
-  imports: [FormField],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Dropdown, FormField, Icon],
   templateUrl: './home.html',
+  styleUrl: './home.scss',
 })
 export class Home {
   private readonly hostElement = inject(ElementRef<HTMLElement>);
@@ -43,24 +56,31 @@ export class Home {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly taskDialog = viewChild.required<ElementRef<HTMLDialogElement>>('taskDialog');
-  private readonly taskTitleInput = viewChild.required<ElementRef<HTMLInputElement>>('taskTitleInput');
   private readonly queryParamMap = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
 
-  protected readonly statusFilters = ['All', ...TASK_STATUSES] as const;
-  protected readonly departmentFilters = ['All', ...TASK_DEPARTMENTS] as const;
+  protected readonly statusFilterOptions: readonly DropdownOption[] = [
+    { value: 'All', label: 'All statuses' },
+    ...TASK_STATUSES.map((status) => ({ value: status, label: this.statusLabel(status) })),
+  ];
+  protected readonly departmentFilterOptions: readonly DropdownOption[] = [
+    { value: 'All', label: 'All departments' },
+    ...TASK_DEPARTMENTS.map((department) => ({ value: department, label: department })),
+  ];
+  protected readonly departmentOptions: readonly DropdownOption[] = TASK_DEPARTMENTS.map(
+    (department) => ({ value: department, label: department }),
+  );
+  protected readonly statusOptions: readonly DropdownOption[] = TASK_STATUSES.map((status) => ({
+    value: status,
+    label: this.statusLabel(status),
+  }));
+  protected readonly priorityOptions: readonly DropdownOption[] = TASK_PRIORITIES.map(
+    (priority) => ({ value: priority, label: priority }),
+  );
   protected readonly priorities = TASK_PRIORITIES;
   protected readonly statuses = TASK_STATUSES;
   protected readonly departments = TASK_DEPARTMENTS;
-  protected readonly primaryButtonClass =
-    'inline-flex min-h-11 items-center justify-center rounded-full bg-[#181512] px-4 text-sm font-bold text-[#fbf7f0] transition-transform duration-200 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none';
-  protected readonly secondaryButtonClass =
-    'inline-flex min-h-11 items-center justify-center rounded-full border border-black/15 bg-[#f5eee4] px-4 text-sm font-bold text-[#181512] transition-transform duration-200 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none';
-  protected readonly ghostButtonClass =
-    'inline-flex min-h-11 items-center justify-center rounded-full border border-black/12 bg-white/80 px-4 text-sm font-bold text-black/70 transition-transform duration-200 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none';
-  protected readonly dangerButtonClass =
-    'inline-flex min-h-11 items-center justify-center rounded-full border border-[#853126]/25 bg-[#853126] px-4 text-sm font-bold text-[#fff7f4] transition-transform duration-200 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none';
 
   protected readonly statusFilter = signal<TaskStatusFilter>('All');
   protected readonly departmentFilter = signal<TaskDepartmentFilter>('All');
@@ -87,8 +107,8 @@ export class Home {
 
   protected readonly tasks = this.taskStore.tasks;
 
-  protected readonly activeTask = computed(() =>
-    this.tasks().find((task) => task.id === this.activeTaskId()) ?? null,
+  protected readonly activeTask = computed(
+    () => this.tasks().find((task) => task.id === this.activeTaskId()) ?? null,
   );
 
   protected readonly summaryCards = computed<readonly SummaryCard[]>(() => {
@@ -121,7 +141,9 @@ export class Home {
     const query = this.searchQuery().trim().toLocaleLowerCase();
 
     return [...this.tasks()]
-      .filter((task) => (this.statusFilter() === 'All' ? true : task.status === this.statusFilter()))
+      .filter((task) =>
+        this.statusFilter() === 'All' ? true : task.status === this.statusFilter(),
+      )
       .filter((task) =>
         this.departmentFilter() === 'All' ? true : task.department === this.departmentFilter(),
       )
@@ -143,12 +165,8 @@ export class Home {
     return `${integerFormatter.format(count)} ${count === 1 ? 'task' : 'tasks'} in view`;
   });
 
-  protected readonly panelEyebrow = computed(() =>
-    this.editorMode() === 'edit' ? 'Update Active Task' : 'Create a New Task',
-  );
-
   protected readonly panelTitle = computed(() =>
-    this.editorMode() === 'edit' ? 'Edit Task Details' : 'Log a New Operational Task',
+    this.editorMode() === 'edit' ? 'Edit Task Details' : 'Create a New Task',
   );
 
   protected readonly panelSummary = computed(() => {
@@ -165,7 +183,12 @@ export class Home {
       return '';
     }
 
-    const firstErrorField = [this.taskForm.title, this.taskForm.department, this.taskForm.status, this.taskForm.priority]
+    const firstErrorField = [
+      this.taskForm.title,
+      this.taskForm.department,
+      this.taskForm.status,
+      this.taskForm.priority,
+    ]
       .map((field) => field())
       .find((field) => field.errors().length > 0);
 
@@ -285,6 +308,18 @@ export class Home {
     this.syncQueryState();
   }
 
+  protected setDraftDepartment(department: TaskDepartment): void {
+    this.draftModel.update((draft) => ({ ...draft, department }));
+  }
+
+  protected setDraftStatus(status: TaskStatus): void {
+    this.draftModel.update((draft) => ({ ...draft, status }));
+  }
+
+  protected setDraftPriority(priority: TaskPriority): void {
+    this.draftModel.update((draft) => ({ ...draft, priority }));
+  }
+
   protected isEditingTask(taskId: number): boolean {
     return this.editorMode() === 'edit' && this.activeTaskId() === taskId;
   }
@@ -334,74 +369,49 @@ export class Home {
     return field.errors()[0]?.message ?? '';
   }
 
-  protected summaryCardClasses(tone: SummaryCard['tone']): string {
-    const base =
-      'rounded-[1.5rem] border border-black/10 p-[1.15rem] shadow-[0_0.8rem_1.8rem_rgba(24,21,18,0.04)]';
-
-    switch (tone) {
-      case 'sand':
-        return `${base} bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(247,240,226,0.96))]`;
-      case 'ink':
-        return `${base} bg-[linear-gradient(180deg,#2d2925,#181512)] text-[#fbf7f0]`;
-      case 'olive':
-        return `${base} bg-[linear-gradient(180deg,#edf0e1,#dde4ca)]`;
-      case 'wine':
-        return `${base} bg-[linear-gradient(180deg,#f6e8e7,#ecd4d2)]`;
-    }
-  }
-
-  protected filterChipClasses(active: boolean): string {
-    const base =
-      'inline-flex min-h-[2.75rem] items-center justify-center rounded-full border px-4 text-sm font-bold transition-[transform,background-color,border-color,color] duration-200 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none';
-
-    return active
-      ? `${base} border-[#181512] bg-[#181512] text-[#fbf7f0]`
-      : `${base} border-black/12 bg-white/85 text-black/70 hover:-translate-y-px hover:bg-[#181512] hover:text-[#fbf7f0]`;
-  }
-
   protected taskCardClasses(taskId: number): string {
     const base =
-      'rounded-[1.45rem] border border-black/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(249,246,240,0.95))] p-4 [contain:layout_style_paint] [contain-intrinsic-block-size:auto_18rem] [content-visibility:auto]';
+      'rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface)] p-3.5 [contain:layout_style_paint] [contain-intrinsic-block-size:auto_15rem] [content-visibility:auto]';
 
     return this.isEditingTask(taskId)
-      ? `${base} border-black/25 shadow-[inset_0_0_0_1px_rgba(24,21,18,0.1)]`
+      ? `${base} border-[var(--accent-border)] shadow-[0_0_0_1px_var(--accent-soft-border),inset_0_0_0_1px_var(--accent-soft-border)]`
       : base;
   }
 
   protected statusPillClasses(status: TaskStatus): string {
     const base =
-      'inline-flex min-h-8 items-center justify-center rounded-full px-3 text-[0.75rem] font-bold uppercase tracking-[0.16em]';
+      'inline-flex min-h-7 items-center justify-center rounded-full px-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em]';
 
     switch (status) {
       case 'Open':
-        return `${base} bg-[#f2e3be] text-black/80`;
+        return `${base} bg-[var(--muted)] text-[var(--muted-foreground)]`;
       case 'InProgress':
-        return `${base} bg-[#dae7db] text-black/80`;
+        return `${base} bg-[var(--accent-soft)] text-[var(--accent-text-strong)]`;
       case 'Done':
-        return `${base} bg-[#dbe5f3] text-black/80`;
+        return `${base} bg-[var(--status-done-soft)] text-[var(--status-done-text)]`;
       case 'Cancelled':
-        return `${base} bg-[#ead7d4] text-black/80`;
+        return `${base} bg-[var(--destructive-soft)] text-[var(--destructive-text-strong)]`;
     }
   }
 
   protected priorityPillClasses(priority: TaskPriority): string {
     const base =
-      'inline-flex min-h-8 items-center justify-center rounded-full px-3 text-[0.75rem] font-bold uppercase tracking-[0.16em]';
+      'inline-flex min-h-7 items-center justify-center rounded-full px-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em]';
 
     switch (priority) {
       case 'Urgent':
-        return `${base} bg-[#853126] text-[#fff7f4]`;
+        return `${base} bg-[var(--destructive)] text-[var(--destructive-foreground)]`;
       case 'High':
-        return `${base} bg-[#8f4d1c] text-[#fff8f0]`;
+        return `${base} bg-[var(--primary)] text-[var(--primary-foreground)]`;
       case 'Medium':
-        return `${base} bg-[#ebe2d0] text-black/80`;
+        return `${base} bg-[var(--accent-soft)] text-[var(--accent-text-strong)]`;
       case 'Low':
-        return `${base} bg-[#ece8df] text-black/80`;
+        return `${base} bg-[var(--secondary)] text-[var(--secondary-foreground)]`;
     }
   }
 
   protected fieldShellClasses(hasError: boolean): string {
-    return hasError ? 'grid gap-2' : 'grid gap-2';
+    return hasError ? 'grid gap-1.5' : 'grid gap-1.5';
   }
 
   protected inputClasses(hasError: boolean): string {
@@ -409,13 +419,13 @@ export class Home {
   }
 
   protected textareaClasses(hasError: boolean): string {
-    return `${createFieldControlClasses(hasError)} min-h-[8.5rem] resize-y`;
+    return `${createFieldControlClasses(hasError)} min-h-[7.5rem] resize-y`;
   }
 
   private focusFirstInvalidField(): void {
     const host = this.hostElement.nativeElement as HTMLElement;
     const firstInvalidField = host.querySelector(
-      '[data-invalid="true"] input, [data-invalid="true"] select, [data-invalid="true"] textarea',
+      '[data-invalid="true"] input, [data-invalid="true"] select, [data-invalid="true"] textarea, [data-invalid="true"] [data-dropdown-trigger]',
     ) as HTMLElement | null;
 
     firstInvalidField?.focus();
@@ -440,7 +450,6 @@ export class Home {
     }
 
     this.isTaskDialogOpen.set(true);
-    queueMicrotask(() => this.taskTitleInput().nativeElement.focus());
   }
 
   private closeDialogAfterSave(): void {
@@ -494,9 +503,9 @@ function normalizeDepartmentFilter(value: string | null): TaskDepartmentFilter {
 
 function createFieldControlClasses(hasError: boolean): string {
   const base =
-    'min-h-12 w-full rounded-2xl border px-4 py-3 text-black transition-[border-color,background-color,transform] duration-200 placeholder:text-black/44 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none';
+    'min-h-11 w-full rounded-[1.1rem] border px-3.5 py-2.5 text-[1rem] text-[var(--foreground)] transition-[border-color,background-color,transform] duration-200 placeholder:text-[var(--soft-ink)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ring)] md:min-h-10 md:text-[0.95rem] motion-reduce:transition-none';
 
   return hasError
-    ? `${base} border-[#853126]/35 bg-[#fffaf8]`
-    : `${base} border-black/14 bg-white/95`;
+    ? `${base} border-[var(--accent-border)] focus-visible:outline-[var(--accent-border)]`
+    : `${base} border-[var(--input)] bg-[var(--background)]`;
 }

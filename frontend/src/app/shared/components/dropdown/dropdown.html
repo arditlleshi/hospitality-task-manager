@@ -1,0 +1,72 @@
+<div
+  class="dropdown"
+  [attr.data-invalid]="invalid() ? 'true' : null"
+  [class.dropdown--open]="isOpen()"
+>
+  <span class="dropdown__label" [id]="labelId()">{{ label() }}</span>
+
+  <div class="dropdown__field">
+    <button
+      #trigger
+      type="button"
+      class="dropdown__trigger"
+      data-dropdown-trigger
+      [class.dropdown__trigger--invalid]="invalid()"
+      [id]="selectId()"
+      [disabled]="disabled()"
+      [attr.aria-haspopup]="'listbox'"
+      [attr.aria-expanded]="isOpen()"
+      [attr.aria-controls]="menuId()"
+      [attr.aria-labelledby]="labelId() + ' ' + selectId()"
+      [attr.aria-describedby]="hint() ? hintId() : null"
+      (click)="toggle()"
+      (keydown)="onTriggerKeydown($event)"
+    >
+      <span class="dropdown__value" [class.dropdown__value--placeholder]="!hasSelection()">
+        {{ displayValue() }}
+      </span>
+
+      <span class="dropdown__chevron" aria-hidden="true"></span>
+    </button>
+
+    <input type="hidden" [name]="name()" [value]="value()" />
+
+    @if (isOpen()) {
+      <div
+        class="dropdown__menu"
+        data-dropdown-menu
+        [class.dropdown__menu--invalid]="invalid()"
+        [id]="menuId()"
+        role="listbox"
+        [style.top.px]="menuTop()"
+        [style.left.px]="menuLeft()"
+        [style.width.px]="menuWidth()"
+        [style.max-height.px]="menuMaxHeight()"
+        [attr.aria-labelledby]="labelId() + ' ' + selectId()"
+        (keydown)="onMenuKeydown($event)"
+      >
+        @for (option of options(); track option.value; let index = $index) {
+          <button
+            type="button"
+            data-dropdown-option
+            class="dropdown__option"
+            [class.dropdown__option--invalid]="invalid()"
+            role="option"
+            [id]="optionId(index)"
+            [attr.aria-selected]="option.value === value()"
+            [disabled]="option.disabled ?? false"
+            [class.is-active]="index === activeIndex()"
+            (click)="selectOption(option)"
+            (mouseenter)="setActiveIndex(index)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (hint()) {
+    <span class="dropdown__hint" [id]="hintId()">{{ hint() }}</span>
+  }
+</div>
