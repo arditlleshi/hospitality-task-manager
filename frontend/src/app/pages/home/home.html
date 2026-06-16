@@ -1,81 +1,335 @@
-<main id="main-content" class="min-h-screen bg-[#f7f4ee] text-[#181512]">
-  <section class="mx-auto max-w-6xl px-6 py-8 sm:px-8 lg:px-10 lg:py-12">
-    <div class="rounded-[2rem] border border-black/10 bg-[#f2ede4] p-6 sm:p-8 lg:p-10">
-      <div class="flex items-center gap-3">
-        <span class="flex size-10 items-center justify-center rounded-full border border-black/10 bg-white text-xs font-semibold tracking-[0.16em]">HT</span>
-        <div class="min-w-0">
-          <p class="truncate text-xs font-medium uppercase tracking-[0.28em] text-black/50">Hospitality Task Manager</p>
-          <p class="truncate text-sm text-black/65">Tasks for rooms, service, and repairs</p>
-        </div>
-      </div>
+<main
+  id="main-content"
+  class="relative min-h-dvh overflow-hidden bg-[linear-gradient(180deg,#fbf7f0_0%,#f4eee4_100%)] px-4 py-8 text-[#181512] md:px-6 lg:px-8 lg:py-12"
+>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(191,166,117,0.18),transparent_28rem)]"
+  ></div>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(24,21,18,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(24,21,18,0.04)_1px,transparent_1px)] bg-[size:2.75rem_2.75rem] [mask-image:linear-gradient(180deg,rgba(0,0,0,0.6),transparent_88%)]"
+  ></div>
 
-      <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_380px] lg:items-start">
+  <section
+    class="relative z-10 mx-auto flex w-full max-w-[84rem] flex-wrap justify-between gap-6 rounded-[2rem] border border-black/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.86),rgba(245,237,222,0.92))] p-6 shadow-[0_1rem_2rem_rgba(24,21,18,0.06),inset_0_1px_rgba(255,255,255,0.7)]"
+  >
+    <div class="min-w-0 flex-[1_1_32rem]">
+      <p class="text-xs font-bold uppercase tracking-[0.28em] text-black/55">Hospitality Task Manager</p>
+      <h1 class="mt-3 text-[clamp(2.65rem,1.8rem+3vw,4.75rem)] leading-[0.96] text-balance">
+        Run the Shift from One Working Board.
+      </h1>
+      <p class="mt-4 max-w-[44rem] text-[1.02rem] leading-[1.72] text-black/72 text-pretty">
+        Track rooms, service, repairs, and team follow-ups from a single operational dashboard.
+        This first milestone is fully interactive and uses local sample data, so the workflow is real
+        even before the backend is connected.
+      </p>
+    </div>
+
+    <div class="grid content-start justify-items-start gap-3">
+      <span
+        translate="no"
+        class="inline-flex min-h-9 min-w-[6.5rem] items-center justify-center rounded-full border border-black/12 bg-white/90 px-4 text-xs font-bold uppercase tracking-[0.16em] text-black/60"
+      >
+        Sample Data Mode
+      </span>
+      <button [class]="primaryButtonClass" type="button" (click)="beginCreate()">Create Task</button>
+    </div>
+  </section>
+
+  <section
+    aria-label="Task summaries"
+    class="relative z-10 mx-auto mt-5 grid w-full max-w-[84rem] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+  >
+    @for (card of summaryCards(); track card.label) {
+      <article [class]="summaryCardClasses(card.tone)">
+        <p class="text-[0.78rem] uppercase tracking-[0.16em] opacity-75">{{ card.label }}</p>
+        <p class="mt-2 text-[clamp(1.8rem,1.4rem+1vw,2.35rem)] font-bold tabular-nums">{{ card.value }}</p>
+      </article>
+    }
+  </section>
+
+  <section class="relative z-10 mx-auto mt-5 w-full max-w-[84rem]">
+    <div
+      class="rounded-[2rem] border border-black/10 bg-white/90 p-5 shadow-[0_1.1rem_2rem_rgba(24,21,18,0.06),inset_0_1px_rgba(255,255,255,0.8)]"
+    >
+      <header class="flex flex-col justify-between gap-4 md:flex-row md:items-start">
         <div>
-          <h1 class="max-w-3xl text-5xl leading-none tracking-[-0.05em] text-balance sm:text-6xl">
-            One Clear Board for Hospitality Tasks.
-          </h1>
-          <p class="mt-6 max-w-2xl text-lg leading-8 text-black/70">
-            Track room prep, repair requests, kitchen follow-ups, and daily operational work in one place. Create tasks, update progress, filter by status, and keep the shift moving.
-          </p>
+          <p class="text-xs font-bold uppercase tracking-[0.28em] text-black/55">Task Board</p>
+          <h2 class="mt-2 text-[clamp(1.8rem,1.45rem+0.8vw,2.4rem)] text-balance">
+            {{ taskBoardHeading() }}
+          </h2>
+        </div>
+        <p class="max-w-[24rem] text-[0.94rem] leading-[1.65] text-black/65 text-pretty">
+          Filter by workflow, narrow by department, and search by title or detail.
+        </p>
+      </header>
 
-          <dl class="mt-8 flex flex-wrap gap-3">
-            @for (item of summary; track item.label) {
-              <div class="rounded-full border border-black/10 bg-white px-4 py-3">
-                <dt class="text-[11px] uppercase tracking-[0.22em] text-black/45">{{ item.label }}</dt>
-                <dd class="mt-1 text-sm font-medium text-black/80">{{ item.value }}</dd>
-              </div>
-            }
-          </dl>
+      <search
+        aria-label="Task filters"
+        class="mt-5 grid gap-4 rounded-[1.5rem] border border-black/8 bg-[#f6f0e6]/70 p-4"
+      >
+        <label class="block">
+          <span class="mb-2 block text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Search</span>
+          <input
+            #searchInput
+            type="search"
+            name="search"
+            autocomplete="off"
+            placeholder="Search tasks or notes&hellip;"
+            [value]="searchQuery()"
+            (input)="updateSearch(searchInput.value)"
+            class="min-h-12 w-full rounded-2xl border border-black/14 bg-white/95 px-4 py-3 text-black transition-[border-color,background-color,transform] duration-200 placeholder:text-black/44 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none"
+          />
+        </label>
 
-          <div class="mt-8 grid gap-3 sm:grid-cols-2">
-            @for (feature of features; track feature.title) {
-              <article class="rounded-[1.35rem] border border-black/10 bg-white p-5">
-                <h2 class="text-2xl">{{ feature.title }}</h2>
-                <p class="mt-2 text-sm leading-7 text-black/65">{{ feature.description }}</p>
-              </article>
+        <div class="grid gap-2">
+          <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Status</span>
+          <div class="flex flex-wrap gap-2" role="group" aria-label="Filter tasks by status">
+            @for (status of statusFilters; track status) {
+              <button
+                type="button"
+                [class]="filterChipClasses(statusFilter() === status)"
+                (click)="setStatusFilter(status)"
+              >
+                {{ status === 'InProgress' ? 'In Progress' : status }}
+              </button>
             }
           </div>
+        </div>
 
-          <div class="mt-8 border-t border-black/10 pt-6">
-            <p class="text-xs font-medium uppercase tracking-[0.28em] text-black/45">Departments</p>
-            <div class="mt-4 flex flex-wrap gap-3">
-              @for (department of departments; track department) {
-                <span class="rounded-full border border-black/10 bg-white px-4 py-3 text-sm text-black/75">{{ department }}</span>
+        <label class="block">
+          <span class="mb-2 block text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Department</span>
+          <select
+            #departmentSelect
+            name="departmentFilter"
+            autocomplete="off"
+            [value]="departmentFilter()"
+            (change)="setDepartmentFilter($any(departmentSelect.value))"
+            class="min-h-12 w-full rounded-2xl border border-black/14 bg-white/95 px-4 py-3 text-black transition-[border-color,background-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none"
+          >
+            @for (department of departmentFilters; track department) {
+              <option [value]="department">{{ department }}</option>
+            }
+          </select>
+        </label>
+      </search>
+
+      <div aria-live="polite" class="mt-4 grid gap-4">
+        @for (task of visibleTasks(); track task.id) {
+          <article [class]="taskCardClasses(task.id)">
+            <div class="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+              <div class="min-w-0">
+                <p class="text-lg font-bold text-black/90">{{ task.title }}</p>
+                <p class="mt-1 break-words text-[0.76rem] uppercase tracking-[0.12em] text-black/48">
+                  {{ task.department }} &middot; Created {{ formatDate(task.createdAt) }}
+                </p>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <span [class]="statusPillClasses(task.status)">{{ statusLabel(task.status) }}</span>
+                <span [class]="priorityPillClasses(task.priority)">{{ task.priority }}</span>
+              </div>
+            </div>
+
+            <p class="mt-4 leading-[1.7] text-black/74 text-pretty">
+              {{ task.description || 'No extra notes have been added yet.' }}
+            </p>
+
+            <dl class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div>
+                <dt class="text-[0.76rem] uppercase tracking-[0.12em] text-black/48">Due</dt>
+                <dd class="mt-1 font-semibold tabular-nums">{{ formatShortDate(task.dueDate) }}</dd>
+              </div>
+              <div>
+                <dt class="text-[0.76rem] uppercase tracking-[0.12em] text-black/48">Priority Note</dt>
+                <dd class="mt-1 font-semibold">{{ priorityHint(task.priority) }}</dd>
+              </div>
+              <div>
+                <dt class="text-[0.76rem] uppercase tracking-[0.12em] text-black/48">Last Change</dt>
+                <dd class="mt-1 font-semibold tabular-nums">{{ formatDate(task.updatedAt || task.createdAt) }}</dd>
+              </div>
+            </dl>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                [class]="secondaryButtonClass"
+                [attr.aria-label]="'Edit task ' + task.title"
+                (click)="beginEdit(task)"
+              >
+                Edit
+              </button>
+
+              @if (pendingDeletionId() === task.id) {
+                <div
+                  aria-live="polite"
+                  class="flex flex-wrap items-center gap-2 rounded-full bg-[#853126]/8 px-3 py-2 text-sm text-[#6c241b]"
+                >
+                  <span>Delete this task?</span>
+                  <button type="button" [class]="dangerButtonClass" (click)="confirmDelete(task)">Confirm Delete</button>
+                  <button type="button" [class]="ghostButtonClass" (click)="clearDeleteRequest()">Keep Task</button>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  [class]="ghostButtonClass"
+                  [attr.aria-label]="'Delete task ' + task.title"
+                  (click)="requestDelete(task.id)"
+                >
+                  Delete
+                </button>
               }
             </div>
-          </div>
-        </div>
-
-        <aside class="rounded-[1.8rem] border border-black/10 bg-white p-5 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
-          <div class="flex items-center justify-between gap-3 border-b border-black/10 pb-4">
-            <div>
-              <p class="text-[11px] uppercase tracking-[0.24em] text-black/45">Board Preview</p>
-              <h2 class="mt-2 text-2xl">Today’s Board</h2>
-            </div>
-            <span class="rounded-full border border-black/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-black/55">Live Status</span>
-          </div>
-
-          <div class="mt-5 flex flex-wrap gap-2">
-            @for (status of statuses; track status) {
-              <span class="rounded-full border border-black/10 px-3 py-1 text-xs text-black/60">{{ status }}</span>
-            }
-          </div>
-
-          <div class="mt-5 space-y-3">
-            @for (task of previewTasks; track task.title) {
-              <article class="rounded-2xl border border-black/10 px-4 py-4">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="min-w-0">
-                    <p class="truncate text-sm font-medium text-black/85">{{ task.title }}</p>
-                    <p class="mt-1 text-sm text-black/55">{{ task.department }}</p>
-                  </div>
-                  <span class="shrink-0 rounded-full bg-black px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[#f7f4ee]">{{ task.status }}</span>
-                </div>
-              </article>
-            }
-          </div>
-        </aside>
+          </article>
+        } @empty {
+          <article class="grid place-items-start gap-3 rounded-[1.5rem] border border-dashed border-black/18 bg-[#fbf7f0]/84 p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.28em] text-black/55">No Matching Tasks</p>
+            <h3 class="text-[clamp(1.8rem,1.45rem+0.8vw,2.4rem)] text-balance">Nothing fits the current filters.</h3>
+            <p class="text-black/72 text-pretty">Adjust the search or filters, or create a new task to populate the board.</p>
+            <button type="button" [class]="secondaryButtonClass" (click)="beginCreate()">Create Task</button>
+          </article>
+        }
       </div>
     </div>
   </section>
+
+  <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+
+  <dialog
+    #taskDialog
+    closedby="none"
+    aria-labelledby="task-dialog-title"
+    aria-describedby="task-dialog-summary"
+    (cancel)="preventDialogCancel($event)"
+    class="fixed inset-0 m-0 h-full w-full !max-h-none !max-w-none overflow-y-auto border-0 bg-transparent p-0 text-left text-[#181512] shadow-none backdrop:bg-black/45 backdrop:backdrop-blur-[2px]"
+  >
+    <div class="flex min-h-full items-center justify-center p-4 sm:p-6">
+      <div class="max-h-[calc(100dvh-2rem)] w-full max-w-[38rem] overflow-y-auto rounded-[2rem] border border-black/10 bg-[#fffaf4] p-5 shadow-[0_1.6rem_3rem_rgba(24,21,18,0.18)] sm:max-h-[calc(100dvh-3rem)] md:p-6">
+        <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-xs font-bold uppercase tracking-[0.28em] text-black/55">{{ panelEyebrow() }}</p>
+          <h2 id="task-dialog-title" class="mt-2 text-[clamp(1.75rem,1.5rem+0.8vw,2.3rem)] text-balance">
+            {{ panelTitle() }}
+          </h2>
+          <p id="task-dialog-summary" class="mt-3 max-w-[30rem] text-[0.94rem] leading-[1.65] text-black/65 text-pretty">
+            {{ panelSummary() }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex size-11 items-center justify-center rounded-full border border-black/12 bg-white/85 text-xl text-black/70 transition-transform duration-200 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#181512] motion-reduce:transition-none"
+          aria-label="Close task dialog"
+          (click)="closeTaskDialog()"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+        @if (formAlert()) {
+          <div aria-live="polite" class="mt-4 rounded-[1.1rem] border border-[#853126]/16 bg-[#853126]/8 px-4 py-3 text-[#6c241b]">
+            {{ formAlert() }}
+          </div>
+        }
+
+        <form class="mt-5 grid gap-4" (submit)="saveTask(); $event.preventDefault()">
+          <label [class]="fieldShellClasses(shouldShowError(taskForm.title()))" [attr.data-invalid]="shouldShowError(taskForm.title()) ? 'true' : null">
+            <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Task Title</span>
+            <input
+              #taskTitleInput
+              data-dialog-title-input
+              type="text"
+              autocomplete="off"
+              spellcheck="true"
+              placeholder="Describe the task clearly&hellip;"
+              [formField]="taskForm.title"
+              [class]="inputClasses(shouldShowError(taskForm.title()))"
+            />
+            @if (shouldShowError(taskForm.title())) {
+              <span class="text-[0.88rem] text-[#6c241b]" aria-live="polite">{{ errorMessage(taskForm.title()) }}</span>
+            }
+          </label>
+
+          <label [class]="fieldShellClasses(shouldShowError(taskForm.description()))" [attr.data-invalid]="shouldShowError(taskForm.description()) ? 'true' : null">
+            <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Description</span>
+            <textarea
+              rows="5"
+              autocomplete="off"
+              placeholder="Add room numbers, guest notes, or follow-up details&hellip;"
+              [formField]="taskForm.description"
+              [class]="textareaClasses(shouldShowError(taskForm.description()))"
+            ></textarea>
+            @if (shouldShowError(taskForm.description())) {
+              <span class="text-[0.88rem] text-[#6c241b]" aria-live="polite">{{ errorMessage(taskForm.description()) }}</span>
+            }
+          </label>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label [class]="fieldShellClasses(shouldShowError(taskForm.department()))" [attr.data-invalid]="shouldShowError(taskForm.department()) ? 'true' : null">
+              <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Department</span>
+              <select
+                autocomplete="off"
+                [formField]="taskForm.department"
+                [class]="inputClasses(shouldShowError(taskForm.department()))"
+              >
+                @for (department of departments; track department) {
+                  <option [value]="department">{{ department }}</option>
+                }
+              </select>
+              @if (shouldShowError(taskForm.department())) {
+                <span class="text-[0.88rem] text-[#6c241b]" aria-live="polite">{{ errorMessage(taskForm.department()) }}</span>
+              }
+            </label>
+
+            <label [class]="fieldShellClasses(shouldShowError(taskForm.status()))" [attr.data-invalid]="shouldShowError(taskForm.status()) ? 'true' : null">
+              <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Status</span>
+              <select
+                autocomplete="off"
+                [formField]="taskForm.status"
+                [class]="inputClasses(shouldShowError(taskForm.status()))"
+              >
+                @for (status of statuses; track status) {
+                  <option [value]="status">{{ statusLabel(status) }}</option>
+                }
+              </select>
+              @if (shouldShowError(taskForm.status())) {
+                <span class="text-[0.88rem] text-[#6c241b]" aria-live="polite">{{ errorMessage(taskForm.status()) }}</span>
+              }
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label [class]="fieldShellClasses(shouldShowError(taskForm.priority()))" [attr.data-invalid]="shouldShowError(taskForm.priority()) ? 'true' : null">
+              <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Priority</span>
+              <select
+                autocomplete="off"
+                [formField]="taskForm.priority"
+                [class]="inputClasses(shouldShowError(taskForm.priority()))"
+              >
+                @for (priority of priorities; track priority) {
+                  <option [value]="priority">{{ priority }}</option>
+                }
+              </select>
+              @if (shouldShowError(taskForm.priority())) {
+                <span class="text-[0.88rem] text-[#6c241b]" aria-live="polite">{{ errorMessage(taskForm.priority()) }}</span>
+              }
+            </label>
+
+            <label class="grid gap-2">
+              <span class="text-[0.78rem] font-bold uppercase tracking-[0.15em] text-black/56">Due Date</span>
+              <input type="date" autocomplete="off" [formField]="taskForm.dueDate" [class]="inputClasses(false)" />
+            </label>
+          </div>
+
+          <div class="mt-1 flex flex-wrap justify-between gap-3 border-t border-black/8 pt-4">
+            <button type="button" [class]="ghostButtonClass" (click)="closeTaskDialog()">Close</button>
+            <button type="submit" [class]="primaryButtonClass">
+              {{ editorMode() === 'edit' ? 'Save Task Changes' : 'Create Task' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
 </main>
