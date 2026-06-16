@@ -1,0 +1,44 @@
+<div class="accordion" role="presentation">
+  @for (item of items(); track itemKey(item, $index); let index = $index) {
+    @let itemId = itemKey(item, index);
+    @let open = isOpen(itemId);
+
+    <section class="accordion__item" [class.accordion__item--open]="open">
+      <h3 class="accordion__heading">
+        <button
+          type="button"
+          class="accordion__trigger"
+          [attr.id]="triggerId(itemId)"
+          [attr.aria-expanded]="open"
+          [attr.aria-controls]="panelId(itemId)"
+          (click)="toggle(itemId)"
+        >
+          <span class="accordion__trigger-content">
+            <ng-container
+              [ngTemplateOutlet]="headerTemplate()"
+              [ngTemplateOutletContext]="contextFor(item, index)"
+            ></ng-container>
+          </span>
+
+          <span class="accordion__chevron" aria-hidden="true"></span>
+        </button>
+      </h3>
+
+      <div
+        class="accordion__panel"
+        [attr.id]="panelId(itemId)"
+        [attr.aria-labelledby]="triggerId(itemId)"
+        role="region"
+        [attr.aria-hidden]="!open"
+        [class.accordion__panel--open]="open"
+      >
+        <div class="accordion__panel-inner">
+          <ng-container
+            [ngTemplateOutlet]="panelTemplate()"
+            [ngTemplateOutletContext]="contextFor(item, index)"
+          ></ng-container>
+        </div>
+      </div>
+    </section>
+  }
+</div>

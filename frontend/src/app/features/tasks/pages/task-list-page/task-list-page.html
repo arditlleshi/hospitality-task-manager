@@ -193,112 +193,120 @@
           class="mt-3.5 rounded-[1.3rem] border border-(--line) bg-(--surface) p-4 text-[0.92rem] text-(--muted-foreground)"
           aria-live="polite"
         >
-          Loading tasks from the API…
+          Loading tasks from the APIâ€¦
         </article>
       } @else {
-        <ul role="list" aria-live="polite" class="mt-3.5 grid gap-3">
-          @for (task of visibleTasks(); track task.id) {
-            <li>
-              <article [class]="taskCardClasses(task.id)">
-                <div class="flex flex-col justify-between gap-2.5 md:flex-row md:items-start">
-                  <div class="min-w-0">
-                    <p
-                      class="text-[1rem] font-bold leading-tight text-(--foreground) md:text-[1.05rem]"
-                    >
-                      {{ task.title }}
-                    </p>
-                    <p
-                      class="mt-1 wrap-break-word text-[0.7rem] uppercase tracking-widest text-(--soft-ink)"
-                    >
-                      {{ task.department }} &middot; Created {{ formatDate(task.createdAt) }}
-                    </p>
-                  </div>
-
-                  <div class="flex flex-wrap gap-2">
-                    <span [class]="statusPillClasses(task.status)">{{
-                      statusLabel(task.status)
-                    }}</span>
-                    <span [class]="priorityPillClasses(task.priority)">{{ task.priority }}</span>
-                  </div>
-                </div>
-
-                <p class="mt-3 leading-[1.55] text-[0.92rem] text-(--muted-foreground) text-pretty">
-                  {{ task.description || 'No extra notes have been added yet.' }}
-                </p>
-
-                <dl class="mt-3 grid grid-cols-1 gap-2.5 md:grid-cols-3">
-                  <div>
-                    <dt class="text-[0.68rem] uppercase tracking-widest text-(--soft-ink)">Due</dt>
-                    <dd class="mt-1 text-[0.9rem] font-semibold tabular-nums">
-                      {{ formatShortDate(task.dueDate) }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[0.68rem] uppercase tracking-widest text-(--soft-ink)">
-                      Priority Note
-                    </dt>
-                    <dd class="mt-1 text-[0.9rem] font-semibold">
-                      {{ priorityHint(task.priority) }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[0.68rem] uppercase tracking-widest text-(--soft-ink)">
-                      Last Change
-                    </dt>
-                    <dd class="mt-1 text-[0.9rem] font-semibold tabular-nums">
-                      {{ formatDate(task.updatedAt || task.createdAt) }}
-                    </dd>
-                  </div>
-                </dl>
-
-                <div class="mt-3 flex flex-wrap items-center gap-2.5">
-                  <button
-                    type="button"
-                    class="btn btn-secondary gap-1.5"
-                    [attr.aria-label]="'Edit task ' + task.title"
-                    (click)="navigateToEdit(task.id)"
-                  >
-                    <app-icon name="update" [size]="18" />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-ghost gap-1.5"
-                    [attr.aria-label]="'Delete task ' + task.title"
-                    (click)="requestDelete(task.id)"
-                  >
-                    <app-icon name="delete" [size]="18" />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </article>
-            </li>
-          } @empty {
-            <li>
-              <article
-                class="grid place-items-start gap-2.5 rounded-[1.3rem] border border-dashed border-(--accent-border) bg-(--empty-surface) p-4"
-              >
-                <p
-                  class="text-[0.69rem] font-bold uppercase tracking-[0.22em] text-(--accent-text-strong)"
-                >
-                  No Matching Tasks
-                </p>
-                <h3 class="text-[clamp(1.4rem,1.18rem+0.7vw,1.9rem)] text-balance">
-                  Nothing fits the current filters.
-                </h3>
-                <p class="text-[0.9rem] text-(--muted-foreground) text-pretty">
-                  Adjust the search or filters, or create a new task to populate the board.
-                </p>
-                <button type="button" class="btn btn-secondary" (click)="navigateToCreate()">
-                  Create Task
-                </button>
-              </article>
-            </li>
-          }
-        </ul>
+        @if (visibleTasks().length) {
+          <app-accordion
+            class="mt-3.5"
+            [items]="visibleTasks()"
+            [trackBy]="trackTask"
+            [headerTemplate]="taskHeader"
+            [panelTemplate]="taskPanel"
+          />
+        } @else {
+          <article
+            class="mt-3.5 grid place-items-start gap-2.5 rounded-[1.3rem] border border-dashed border-(--accent-border) bg-(--empty-surface) p-4"
+          >
+            <p class="text-[0.69rem] font-bold uppercase tracking-[0.22em] text-(--accent-text-strong)">
+              No Matching Tasks
+            </p>
+            <h3 class="text-[clamp(1.4rem,1.18rem+0.7vw,1.9rem)] text-balance">
+              Nothing fits the current filters.
+            </h3>
+            <p class="text-[0.9rem] text-(--muted-foreground) text-pretty">
+              Adjust the search or filters, or create a new task to populate the board.
+            </p>
+            <button type="button" class="btn btn-secondary" (click)="navigateToCreate()">
+              Create Task
+            </button>
+          </article>
+        }
       }
     </div>
   </section>
+
+  <ng-template #taskHeader let-task let-open="open">
+    <div class="flex flex-col justify-between gap-2.5 md:flex-row md:items-start">
+      <div class="min-w-0">
+        <p class="text-[1rem] font-bold leading-tight text-(--foreground) md:text-[1.05rem]">
+          {{ task.title }}
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <span [class]="statusPillClasses(task.status)">{{ statusLabel(task.status) }}</span>
+        <span [class]="priorityPillClasses(task.priority)">{{ task.priority }}</span>
+        <span
+          class="inline-flex min-h-7 items-center justify-center rounded-full bg-(--muted) px-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-(--muted-foreground)"
+        >
+          {{ task.department }}
+        </span>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #taskPanel let-task let-open="open">
+    <div [class]="taskAccordionPanelClasses(task.id)">
+      <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem] md:items-start">
+        <div class="grid gap-3">
+          <p class="text-[0.7rem] uppercase tracking-widest text-(--soft-ink)">
+            Created {{ formatDate(task.createdAt) }}
+          </p>
+
+          <p class="leading-[1.55] text-[0.92rem] text-(--muted-foreground) text-pretty">
+            {{ task.description || 'No extra notes have been added yet.' }}
+          </p>
+
+          <dl class="grid grid-cols-1 gap-2.5 md:grid-cols-3">
+            <div>
+              <dt class="text-[0.68rem] uppercase tracking-widest text-(--soft-ink)">Due</dt>
+              <dd class="mt-1 text-[0.9rem] font-semibold tabular-nums">
+                {{ formatShortDate(task.dueDate) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[0.68rem] uppercase tracking-widest text-(--soft-ink)">
+                Priority Note
+              </dt>
+              <dd class="mt-1 text-[0.9rem] font-semibold">
+                {{ priorityHint(task.priority) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[0.68rem] uppercase tracking-widest text-(--soft-ink)">
+                Last Change
+              </dt>
+              <dd class="mt-1 text-[0.9rem] font-semibold tabular-nums">
+                {{ formatDate(task.updatedAt || task.createdAt) }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="flex flex-col gap-2.5 md:items-end">
+          <button
+            type="button"
+            class="btn btn-secondary gap-1.5 md:w-full"
+            [attr.aria-label]="'Edit task ' + task.title"
+            (click)="navigateToEdit(task.id)"
+          >
+            <app-icon name="update" [size]="18" />
+            <span>Edit</span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost gap-1.5 md:w-full"
+            [attr.aria-label]="'Delete task ' + task.title"
+            (click)="requestDelete(task.id)"
+          >
+            <app-icon name="delete" [size]="18" />
+            <span>Delete</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
 
   @if (taskEditorTarget(); as editor) {
     <app-task-editor-modal

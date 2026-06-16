@@ -19,6 +19,7 @@ import {
   TaskItem,
   TaskStatus,
 } from '../../task.models';
+import { Accordion } from '../../../../shared/components/accordion/accordion';
 import { Dialog } from '../../../../shared/components/dialog/dialog';
 import { Dropdown, type DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Icon } from '../../../../shared/components/icon/icon';
@@ -54,7 +55,7 @@ type PageBanner = {
 @Component({
   selector: 'app-task-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dialog, Dropdown, Icon, TaskEditorModal],
+  imports: [Accordion, Dialog, Dropdown, Icon, TaskEditorModal],
   templateUrl: './task-list-page.html',
   styleUrl: './task-list-page.scss',
 })
@@ -165,6 +166,7 @@ export class TaskListPage {
   protected readonly pendingDeletionTask = computed(
     () => this.tasks().find((task) => task.id === this.pendingDeletionId()) ?? null,
   );
+  protected readonly trackTask = (task: TaskItem, _index: number): number => task.id;
 
   protected readonly taskBoardHeading = computed(() => {
     const count = this.visibleTasks().length;
@@ -397,9 +399,9 @@ export class TaskListPage {
     }
   }
 
-  protected taskCardClasses(taskId: number): string {
+  protected taskAccordionPanelClasses(taskId: number): string {
     const base =
-      'rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface)] p-3.5 [contain:layout_style_paint] [contain-intrinsic-block-size:auto_15rem] [content-visibility:auto]';
+      'grid gap-3 rounded-[1.25rem] border border-[var(--line)] bg-[var(--surface)] p-4 [contain:layout_style_paint] [contain-intrinsic-block-size:auto_15rem] [content-visibility:auto]';
 
     return this.pendingDeletionId() === taskId
       ? `${base} border-[var(--accent-border)] shadow-[0_0_0_1px_var(--accent-soft-border),inset_0_0_0_1px_var(--accent-soft-border)]`

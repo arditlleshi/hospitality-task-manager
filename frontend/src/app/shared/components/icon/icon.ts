@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-export type IconName = 'delete' | 'update' | 'x';
+export type IconName = 'arrow' | 'delete' | 'update' | 'x';
 
 @Component({
   selector: 'app-icon',
