@@ -1,3 +1,5 @@
+import { toApiDateTimeValue, toDateTimeInputValue } from '../../shared/utils/date-time';
+
 export const TASK_DEPARTMENTS = [
   'Reception',
   'Housekeeping',
@@ -66,7 +68,7 @@ export function createTaskDraft(task: TaskItem): TaskDraft {
     department: task.department,
     status: task.status,
     priority: task.priority,
-    dueDate: task.dueDate ? task.dueDate.slice(0, 10) : '',
+    dueDate: task.dueDate ? toDateTimeInputValue(task.dueDate) : '',
   };
 }
 
@@ -96,5 +98,5 @@ function normalizeOptionalText(value: string): string | undefined {
 }
 
 function normalizeOptionalDate(value: string): string | undefined {
-  return value ? new Date(`${value}T09:00:00`).toISOString() : undefined;
+  return toApiDateTimeValue(value);
 }

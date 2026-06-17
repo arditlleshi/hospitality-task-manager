@@ -23,6 +23,7 @@ import { Accordion } from '../../../../shared/components/accordion/accordion';
 import { Dialog } from '../../../../shared/components/dialog/dialog';
 import { Dropdown, type DropdownOption } from '../../../../shared/components/dropdown/dropdown';
 import { Icon } from '../../../../shared/components/icon/icon';
+import { parseDateTimeValue } from '../../../../shared/utils/date-time';
 
 type TaskStatusFilter = TaskStatus | 'All';
 type TaskDepartmentFilter = TaskDepartment | 'All';
@@ -384,7 +385,8 @@ export class TaskListPage {
       return 'Flexible';
     }
 
-    return shortDateFormatter.format(new Date(date));
+    const parsed = parseDateTimeValue(date);
+    return parsed ? dueDateFormatter.format(parsed) : 'Flexible';
   }
 
   protected priorityHint(priority: TaskItem['priority']): string {
@@ -529,9 +531,9 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   timeStyle: 'short',
 });
 
-const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
+const dueDateFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
 });
 
 const integerFormatter = new Intl.NumberFormat('en-US');

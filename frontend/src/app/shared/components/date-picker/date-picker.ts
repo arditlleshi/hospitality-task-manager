@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  HostListener,
   computed,
   effect,
   inject,
@@ -11,6 +10,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+
+import { Dropdown, type DropdownOption } from '../dropdown/dropdown';
+import {
+  formatDateKey as formatDateValueKey,
+  formatTimeValue,
+  hasTimeComponent,
+  parseDateTimeValue,
+} from '../../utils/date-time';
 
 type CalendarDay = {
   readonly dateKey: string;
@@ -21,11 +28,17 @@ type CalendarDay = {
   readonly isSelected: boolean;
 };
 
+const DEFAULT_TIME_VALUE = '09:00';
+
 @Component({
   selector: 'app-date-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Dropdown],
   templateUrl: './date-picker.html',
   styleUrl: './date-picker.scss',
+  host: {
+    '(document:pointerdown)': 'onDocumentPointerDown($event)',
+  },
 })
 export class DatePicker {
   private readonly hostElement = inject(ElementRef<HTMLElement>);
@@ -55,10 +68,15 @@ export class DatePicker {
   protected readonly labelId = computed(() => `${this.pickerId()}-label`);
   protected readonly menuId = computed(() => `${this.pickerId()}-menu`);
   protected readonly hintId = computed(() => `${this.pickerId()}-hint`);
-  protected readonly selectedDate = computed(() => parseDateString(this.value()));
+  protected readonly selectedDate = computed(() => parseDateTimeValue(this.value()));
+  protected readonly selectedTimeValue = computed(() =>
+    this.selectedDate()
+      ? formatSelectedTime(this.value(), this.selectedDate()!)
+      : DEFAULT_TIME_VALUE,
+  );
   protected readonly displayValue = computed(() =>
     this.selectedDate()
-      ? formatLongDate(this.selectedDate()!)
+      ? formatLongDateTime(this.selectedDate()!)
       : (this.placeholder() ?? 'Select a date'),
   );
   protected readonly monthLabel = computed(() => monthYearFormatter.format(this.viewMonth()));
@@ -70,6 +88,18 @@ export class DatePicker {
         .find((day) => day.dateKey === this.activeDateKey()) ?? null,
   );
   protected readonly hasSelection = computed(() => Boolean(this.selectedDate()));
+  protected readonly hourPickerId = computed(() => `${this.pickerId()}-hour`);
+  protected readonly minutePickerId = computed(() => `${this.pickerId()}-minute`);
+  protected readonly hourPickerName = computed(() => `${this.name()}-hour`);
+  protected readonly minutePickerName = computed(() => `${this.name()}-minute`);
+  protected readonly hourOptions = TIME_HOUR_OPTIONS;
+  protected readonly minuteOptions = TIME_MINUTE_OPTIONS;
+  protected readonly selectedHourValue = computed(() =>
+    formatTimePart(this.selectedDate()?.getHours() ?? 9),
+  );
+  protected readonly selectedMinuteValue = computed(() =>
+    formatTimePart(this.selectedDate()?.getMinutes() ?? 0),
+  );
 
   constructor() {
     effect(() => {
@@ -103,7 +133,7 @@ export class DatePicker {
 
       this.viewMonth.set(startOfMonth(selected));
       if (!this.activeDateKey()) {
-        this.activeDateKey.set(formatDateKey(selected));
+        this.activeDateKey.set(formatDateValueKey(selected));
       }
     });
   }
@@ -123,7 +153,7 @@ export class DatePicker {
 
     const selected = this.selectedDate() ?? new Date();
     this.viewMonth.set(startOfMonth(selected));
-    this.activeDateKey.set(formatDateKey(selected));
+    this.activeDateKey.set(formatDateValueKey(selected));
     this.updateMenuPosition();
     this.isOpen.set(true);
   }
@@ -141,8 +171,12 @@ export class DatePicker {
       this.viewMonth.set(startOfMonth(parseDateKey(day.dateKey)));
     }
 
-    this.valueChange.emit(day.dateKey);
-    this.close(true);
+    const timeValue = this.selectedTimeValue();
+
+    this.activeDateKey.set(day.dateKey);
+    this.valueChange.emit(formatDateTimeValue(day.dateKey, timeValue));
+
+    queueMicrotask(() => this.focusHourPicker());
   }
 
   protected previousMonth(): void {
@@ -178,6 +212,34 @@ export class DatePicker {
   }
 
   protected onMenuKeydown(event: KeyboardEvent): void {
+    const target = event.target;
+
+    if (event.key === 'Tab') {
+      this.close(false);
+      return;
+    }
+
+    if (
+      target instanceof HTMLElement &&
+      target.closest('[data-dropdown-menu], [data-dropdown-option]')
+    ) {
+      return;
+    }
+
+    if (target instanceof HTMLInputElement) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.close(true);
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        this.close(false);
+      }
+
+      return;
+    }
+
     switch (event.key) {
       case 'ArrowLeft':
         event.preventDefault();
@@ -234,7 +296,6 @@ export class DatePicker {
     return this.activeDateKey() === dateKey;
   }
 
-  @HostListener('document:pointerdown', ['$event'])
   protected onDocumentPointerDown(event: PointerEvent): void {
     if (!this.isOpen()) {
       return;
@@ -246,6 +307,14 @@ export class DatePicker {
     }
 
     this.close(false);
+  }
+
+  protected updateHour(value: string): void {
+    this.updateTimePart('hour', value);
+  }
+
+  protected updateMinute(value: string): void {
+    this.updateTimePart('minute', value);
   }
 
   private commitActiveDay(): void {
@@ -263,6 +332,14 @@ export class DatePicker {
     ) as HTMLButtonElement | null;
 
     activeButton?.focus();
+  }
+
+  private focusHourPicker(): void {
+    const hourPicker = this.hostElement.nativeElement.querySelector(
+      `[id="${this.hourPickerId()}"]`,
+    ) as HTMLButtonElement | null;
+
+    hourPicker?.focus();
   }
 
   private updateMenuPosition(): void {
@@ -291,51 +368,71 @@ export class DatePicker {
       current.getFullYear() !== viewMonth.getFullYear() ||
       current.getMonth() !== viewMonth.getMonth()
     ) {
-      this.activeDateKey.set(formatDateKey(viewMonth));
+      this.activeDateKey.set(formatDateValueKey(viewMonth));
     }
   }
 
   private moveActiveByDays(days: number): void {
     const current = parseDateKey(
-      this.activeDateKey() || formatDateKey(this.selectedDate() ?? new Date()),
+      this.activeDateKey() || formatDateValueKey(this.selectedDate() ?? new Date()),
     );
     const next = new Date(current);
     next.setDate(next.getDate() + days);
-    this.activeDateKey.set(formatDateKey(next));
+    this.activeDateKey.set(formatDateValueKey(next));
     this.viewMonth.set(startOfMonth(next));
   }
 
   private moveActiveByMonths(months: number): void {
     const current = parseDateKey(
-      this.activeDateKey() || formatDateKey(this.selectedDate() ?? new Date()),
+      this.activeDateKey() || formatDateValueKey(this.selectedDate() ?? new Date()),
     );
     const next = addMonths(current, months);
-    this.activeDateKey.set(formatDateKey(next));
+    this.activeDateKey.set(formatDateValueKey(next));
     this.viewMonth.set(startOfMonth(next));
   }
 
   private moveActiveToWeekStart(): void {
     const current = parseDateKey(
-      this.activeDateKey() || formatDateKey(this.selectedDate() ?? new Date()),
+      this.activeDateKey() || formatDateValueKey(this.selectedDate() ?? new Date()),
     );
     const next = new Date(current);
     next.setDate(next.getDate() - next.getDay());
-    this.activeDateKey.set(formatDateKey(next));
+    this.activeDateKey.set(formatDateValueKey(next));
     this.viewMonth.set(startOfMonth(next));
   }
 
   private moveActiveToWeekEnd(): void {
     const current = parseDateKey(
-      this.activeDateKey() || formatDateKey(this.selectedDate() ?? new Date()),
+      this.activeDateKey() || formatDateValueKey(this.selectedDate() ?? new Date()),
     );
     const next = new Date(current);
     next.setDate(next.getDate() + (6 - next.getDay()));
-    this.activeDateKey.set(formatDateKey(next));
+    this.activeDateKey.set(formatDateValueKey(next));
     this.viewMonth.set(startOfMonth(next));
   }
 
   private hostContains(target: Node): boolean {
     return this.hostElement.nativeElement.contains(target);
+  }
+
+  private updateTimePart(part: 'hour' | 'minute', value: string): void {
+    const selectedDate = this.selectedDate();
+    if (!selectedDate) {
+      return;
+    }
+
+    const currentHour = formatTimePart(selectedDate.getHours());
+    const currentMinute = formatTimePart(selectedDate.getMinutes());
+    const nextHour = part === 'hour' ? value : currentHour;
+    const nextMinute = part === 'minute' ? value : currentMinute;
+
+    if (!isValidHourValue(nextHour) || !isValidMinuteValue(nextMinute)) {
+      return;
+    }
+
+    this.valueChange.emit(
+      formatDateTimeValue(formatDateValueKey(selectedDate), `${nextHour}:${nextMinute}`),
+    );
   }
 }
 
@@ -345,14 +442,14 @@ function buildCalendar(
 ): readonly (readonly CalendarDay[])[] {
   const monthStart = startOfMonth(viewMonth);
   const gridStart = startOfWeek(monthStart);
-  const todayKey = formatDateKey(new Date());
-  const selectedKey = selectedValue;
+  const todayKey = formatDateValueKey(new Date());
+  const selectedKey = extractSelectedDateKey(selectedValue);
   const days: CalendarDay[] = [];
 
   for (let index = 0; index < 42; index += 1) {
     const date = new Date(gridStart);
     date.setDate(gridStart.getDate() + index);
-    const dateKey = formatDateKey(date);
+    const dateKey = formatDateValueKey(date);
 
     days.push({
       dateKey,
@@ -382,32 +479,51 @@ function addMonths(date: Date, months: number): Date {
 }
 
 function parseDateString(value: string): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) {
-    return null;
-  }
-
-  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return parseDateTimeValue(value);
 }
 
 function parseDateKey(value: string): Date {
   return parseDateString(value) ?? new Date();
 }
 
-function formatDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function formatLongDateTime(date: Date): string {
+  return longDateTimeFormatter.format(date);
 }
 
-function formatLongDate(date: Date): string {
-  return longDateFormatter.format(date);
+function formatSelectedTime(value: string, selectedDate: Date): string {
+  return hasTimeComponent(value) ? formatTimeValue(selectedDate) : DEFAULT_TIME_VALUE;
 }
+
+function formatDateTimeValue(dateKey: string, timeValue: string): string {
+  return `${dateKey}T${timeValue}`;
+}
+
+function extractSelectedDateKey(value: string): string {
+  const parsed = parseDateTimeValue(value);
+  return parsed ? formatDateValueKey(parsed) : '';
+}
+
+function isValidHourValue(value: string): boolean {
+  return /^(?:[01]\d|2[0-3])$/.test(value);
+}
+
+function isValidMinuteValue(value: string): boolean {
+  return /^[0-5]\d$/.test(value);
+}
+
+function formatTimePart(value: number): string {
+  return `${value}`.padStart(2, '0');
+}
+
+function buildTimeOptions(limit: number): readonly DropdownOption[] {
+  return Array.from({ length: limit }, (_value, index) => {
+    const formatted = formatTimePart(index);
+    return { value: formatted, label: formatted };
+  });
+}
+
+const TIME_HOUR_OPTIONS = buildTimeOptions(24);
+const TIME_MINUTE_OPTIONS = buildTimeOptions(60);
 
 function chunk<T>(values: readonly T[], size: number): readonly T[][] {
   const chunks: T[][] = [];
@@ -427,8 +543,7 @@ const dayFormatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-const longDateFormatter = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
+const longDateTimeFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
 });

@@ -143,32 +143,38 @@ export class Dropdown {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
+        event.stopPropagation();
         this.open();
         this.moveActive(1);
         break;
       case 'ArrowUp':
         event.preventDefault();
+        event.stopPropagation();
         this.open();
         this.moveActive(-1);
         break;
       case 'Home':
         event.preventDefault();
+        event.stopPropagation();
         this.open();
         this.setFirstEnabledOption();
         break;
       case 'End':
         event.preventDefault();
+        event.stopPropagation();
         this.open();
         this.setLastEnabledOption();
         break;
       case 'Enter':
       case ' ':
         event.preventDefault();
+        event.stopPropagation();
         this.toggle();
         break;
       case 'Escape':
         if (this.isOpen()) {
           event.preventDefault();
+          event.stopPropagation();
           this.close(true);
         }
         break;
@@ -179,31 +185,37 @@ export class Dropdown {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
+        event.stopPropagation();
         this.moveActive(1);
         this.focusActiveOption();
         break;
       case 'ArrowUp':
         event.preventDefault();
+        event.stopPropagation();
         this.moveActive(-1);
         this.focusActiveOption();
         break;
       case 'Home':
         event.preventDefault();
+        event.stopPropagation();
         this.setFirstEnabledOption();
         this.focusActiveOption();
         break;
       case 'End':
         event.preventDefault();
+        event.stopPropagation();
         this.setLastEnabledOption();
         this.focusActiveOption();
         break;
       case 'Enter':
       case ' ':
         event.preventDefault();
+        event.stopPropagation();
         this.commitActiveOption();
         break;
       case 'Escape':
         event.preventDefault();
+        event.stopPropagation();
         this.close(true);
         break;
       case 'Tab':

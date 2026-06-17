@@ -96,6 +96,49 @@
             }
           }
         </div>
+
+        <div class="date-picker__time-shell">
+          <div class="date-picker__time-header">
+            <p class="date-picker__time-label">Time</p>
+            <p class="date-picker__time-value">{{ selectedTimeValue() }}</p>
+          </div>
+
+          <div class="date-picker__time-grid">
+            <app-dropdown
+              [label]="'Hour'"
+              [name]="hourPickerName()"
+              [id]="hourPickerId()"
+              [options]="hourOptions"
+              [value]="selectedHourValue()"
+              [disabled]="!hasSelection()"
+              [invalid]="invalid()"
+              (valueChange)="updateHour($any($event))"
+            />
+
+            <app-dropdown
+              [label]="'Minute'"
+              [name]="minutePickerName()"
+              [id]="minutePickerId()"
+              [options]="minuteOptions"
+              [value]="selectedMinuteValue()"
+              [disabled]="!hasSelection()"
+              [invalid]="invalid()"
+              (valueChange)="updateMinute($any($event))"
+            />
+          </div>
+
+          <p class="date-picker__time-note">
+            @if (hasSelection()) {
+              Adjust the hour and minute with the same picker style as the date field.
+            } @else {
+              Pick a date to enable the time.
+            }
+          </p>
+
+          <div class="date-picker__actions">
+            <button type="button" class="date-picker__done" (click)="close(true)">Done</button>
+          </div>
+        </div>
       </div>
     }
   </div>

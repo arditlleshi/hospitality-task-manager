@@ -141,8 +141,9 @@
         </div>
 
         <app-date-picker
-          label="Due Date"
+          label="Due Date & Time"
           name="dueDate"
+          hint="Choose a day, then set the hour and minute."
           placeholder="Flexible"
           [value]="draftModel().dueDate"
           (valueChange)="setDraftDueDate($any($event))"
