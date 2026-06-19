@@ -5,9 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HospitalityTaskManager.Api.Services;
 
-/// <summary>
-/// Implements task-related application logic.
-/// </summary>
 public sealed class TaskService(
     AppDbContext dbContext,
     ILogger<TaskService> logger) : ITaskService
@@ -18,12 +15,6 @@ public sealed class TaskService(
     private readonly ILogger<TaskService> _logger =
         logger ?? throw new ArgumentNullException(nameof(logger));
 
-    /// <summary>
-    /// Gets tasks that match the provided filter criteria.
-    /// </summary>
-    /// <param name="query">The optional task filters.</param>
-    /// <param name="cancellationToken">Cancels the operation when the request is aborted.</param>
-    /// <returns>The tasks that match the request.</returns>
     public async Task<IReadOnlyList<TaskDto>> GetTasksAsync(
         GetTasksQueryDto query,
         CancellationToken cancellationToken)
@@ -43,7 +34,6 @@ public sealed class TaskService(
         return tasks.Select(MapToDto).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<TaskSummaryDto> GetTaskSummaryAsync(
         GetTasksQueryDto query,
         CancellationToken cancellationToken)
@@ -73,12 +63,6 @@ public sealed class TaskService(
         };
     }
 
-    /// <summary>
-    /// Gets a task by identifier.
-    /// </summary>
-    /// <param name="taskId">The task identifier.</param>
-    /// <param name="cancellationToken">Cancels the operation when the request is aborted.</param>
-    /// <returns>The matching task when it exists; otherwise <c>null</c>.</returns>
     public async Task<TaskDto?> GetTaskByIdAsync(int taskId, CancellationToken cancellationToken)
     {
         var task = await _dbContext.Tasks
@@ -89,12 +73,6 @@ public sealed class TaskService(
         return task is null ? null : MapToDto(task);
     }
 
-    /// <summary>
-    /// Creates a new task.
-    /// </summary>
-    /// <param name="request">The task creation request.</param>
-    /// <param name="cancellationToken">Cancels the operation when the request is aborted.</param>
-    /// <returns>The created task.</returns>
     public async Task<TaskDto> CreateTaskAsync(CreateTaskDto request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -118,13 +96,6 @@ public sealed class TaskService(
         return MapToDto(task);
     }
 
-    /// <summary>
-    /// Updates an existing task.
-    /// </summary>
-    /// <param name="taskId">The task identifier.</param>
-    /// <param name="request">The task update request.</param>
-    /// <param name="cancellationToken">Cancels the operation when the request is aborted.</param>
-    /// <returns>The updated task when it exists; otherwise <c>null</c>.</returns>
     public async Task<TaskDto?> UpdateTaskAsync(
         int taskId,
         UpdateTaskDto request,
@@ -156,12 +127,6 @@ public sealed class TaskService(
         return MapToDto(task);
     }
 
-    /// <summary>
-    /// Deletes an existing task.
-    /// </summary>
-    /// <param name="taskId">The task identifier.</param>
-    /// <param name="cancellationToken">Cancels the operation when the request is aborted.</param>
-    /// <returns><c>true</c> when the task was deleted; otherwise <c>false</c>.</returns>
     public async Task<bool> DeleteTaskAsync(int taskId, CancellationToken cancellationToken)
     {
         var task = await _dbContext.Tasks

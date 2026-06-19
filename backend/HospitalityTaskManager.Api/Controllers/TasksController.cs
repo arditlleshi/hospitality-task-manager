@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalityTaskManager.Api.Controllers;
 
-/// <summary>
-/// Exposes CRUD operations for hospitality tasks.
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public sealed class TasksController(ITaskService taskService) : ControllerBase
@@ -14,12 +11,6 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
     private readonly ITaskService _taskService =
         taskService ?? throw new ArgumentNullException(nameof(taskService));
 
-    /// <summary>
-    /// Gets tasks that match the provided filters.
-    /// </summary>
-    /// <param name="query">The optional task filters.</param>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>The matching tasks.</returns>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<TaskDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<TaskDto>>> GetTasksAsync(
@@ -30,12 +21,6 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
         return Ok(tasks);
     }
 
-    /// <summary>
-    /// Gets the summary counts for tasks that match the provided filters.
-    /// </summary>
-    /// <param name="query">The optional task filters.</param>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>The task summary counts.</returns>
     [HttpGet("summary")]
     [ProducesResponseType<TaskSummaryDto>(StatusCodes.Status200OK)]
     public async Task<ActionResult<TaskSummaryDto>> GetTaskSummaryAsync(
@@ -46,12 +31,6 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
         return Ok(summary);
     }
 
-    /// <summary>
-    /// Gets a task by identifier.
-    /// </summary>
-    /// <param name="taskId">The task identifier.</param>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>The matching task.</returns>
     [HttpGet("{taskId:int}", Name = "GetTaskById")]
     [ProducesResponseType<TaskDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -67,12 +46,6 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
         return task is null ? NotFound() : Ok(task);
     }
 
-    /// <summary>
-    /// Creates a new task.
-    /// </summary>
-    /// <param name="request">The task creation payload.</param>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>The created task.</returns>
     [HttpPost]
     [ProducesResponseType<TaskDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -85,13 +58,6 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
         return CreatedAtRoute("GetTaskById", new { taskId = task.Id }, task);
     }
 
-    /// <summary>
-    /// Updates an existing task.
-    /// </summary>
-    /// <param name="taskId">The task identifier.</param>
-    /// <param name="request">The task update payload.</param>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>The updated task.</returns>
     [HttpPut("{taskId:int}")]
     [ProducesResponseType<TaskDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -111,12 +77,6 @@ public sealed class TasksController(ITaskService taskService) : ControllerBase
         return task is null ? NotFound() : Ok(task);
     }
 
-    /// <summary>
-    /// Deletes an existing task.
-    /// </summary>
-    /// <param name="taskId">The task identifier.</param>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>No content when the task is deleted.</returns>
     [HttpDelete("{taskId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

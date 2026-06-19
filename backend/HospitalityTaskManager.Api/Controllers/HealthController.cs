@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalityTaskManager.Api.Controllers;
 
-/// <summary>
-/// Exposes operational health information for the API.
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public sealed class HealthController(IHealthStatusService healthStatusService) : ControllerBase
@@ -14,11 +11,6 @@ public sealed class HealthController(IHealthStatusService healthStatusService) :
     private readonly IHealthStatusService _healthStatusService =
         healthStatusService ?? throw new ArgumentNullException(nameof(healthStatusService));
 
-    /// <summary>
-    /// Returns the current operational status of the API.
-    /// </summary>
-    /// <param name="cancellationToken">Cancels the request if the client disconnects.</param>
-    /// <returns>The current API status payload.</returns>
     [HttpGet]
     [ProducesResponseType<ApiStatusDto>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiStatusDto>> GetAsync(CancellationToken cancellationToken)
